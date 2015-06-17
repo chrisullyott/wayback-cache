@@ -77,7 +77,7 @@ class Cache {
 		$this->cache_path = $this->path($this->container, $this->key);
 		$this->catalog_path = $this->path($this->cache_path, '.catalog');
 
-		// Invalidate the cache
+		// Forcibly invalidate the cache
 		$this->userExpired = false;
 		if(isset($_GET['expireCache'])){
 			$this->userExpired = true;
@@ -128,8 +128,6 @@ class Cache {
 
 
 	public function write($data = ''){
-
-		$data = trim($data);
 
 		if($data!=''){
 
@@ -188,22 +186,23 @@ class Cache {
 		if($history_states){
 			$last_data = $this->read_history($history_states);
 			if(($this->current_time < $catalog['expire_time']) && !$this->userExpired){
-				$data = $last_data;
+				return $last_data;
 			}
 		}
 
 		// data has expired
 		if(!$data || !$this->is_congruent_cache($catalog)){
 
+			// use multiple attempts
 			if($this->retry){
 				$attempt = 0;
 				$attempt_max = 2;
 				while(($data=='' || $data==$last_data) && ($attempt < $attempt_max)){
-					$data = trim($this->get_data($url));
+					$data = $this->get_data($url);
 					$attempt++;
 				}
 			} else {
-				$data = trim($this->get_data($url));
+				$data = $this->get_data($url);
 			}
 
 			// store a history state
@@ -310,7 +309,7 @@ class Cache {
 	}
 
 
-	// read a given history file, $index = 0 for the latest
+	// read a given history state, $index = 0 defaults to latest
 	public function read_history($history_states, $index = 0){
 		if(isset($history_states[$index]['file'])){
 			$file_path = $this->path($this->cache_path, $history_states[$index]['file']);
