@@ -231,9 +231,11 @@ class Cache {
 				'history'       => $history_preserved
 			));
 
+			return $data;
+
 		}
 
-		return $data;
+		return false;
 
 	}
 
@@ -444,23 +446,23 @@ class Cache {
 
 
 	// read a file
-	public function read_file($filepath, $perms = 0775){
+	public function read_file($filepath){
 		if(file_exists($filepath)){
-			if(!is_readable($filepath)){
-				chmod($filepath, $perms);
-			}
 			return file_get_contents($filepath);
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 
 	// create a directory
 	public function create_dir($path, $perms = 0775){
-		if(!is_dir($path)){
-			mkdir($path, $perms, true);
-			chmod($path, $perms);
+		if(!file_exists($path)){
+			if(mkdir($path, $perms, true)){
+				chmod($path, $perms);
+				return true;
+			} else {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -469,8 +471,12 @@ class Cache {
 	// create a file
 	public function create_file($filepath, $contents = '', $perms = 0775){
 		if(!file_exists($filepath)){
-			file_put_contents($filepath, $contents);
-			chmod($filepath, $perms);
+			if(file_put_contents($filepath, $contents)!=false){
+				chmod($filepath, $perms);
+				return true;
+			} else {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -482,12 +488,16 @@ class Cache {
 			if(!is_writeable($filepath)){
 				chmod($filepath, $perms);
 			}
-			file_put_contents($filepath, $contents);
+			if(file_put_contents($filepath, $contents)!=false){
+				return true;
+			}
 		} else {
-			file_put_contents($filepath, $contents);
-			chmod($filepath, $perms);
+			if(file_put_contents($filepath, $contents)!=false){
+				chmod($filepath, $perms);
+				return true;
+			}
 		}
-		return true;
+		return false;
 	}
 
 
