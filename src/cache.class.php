@@ -41,30 +41,40 @@ class Cache {
 
 		// Vars as array
 		if(is_array($options)){
+
 			$this->key = 'default';
 			if(isset($options['key'])){
 				$this->key = $options['key'];
 			}
+
 			$this->expire = 'nightly';
 			if(isset($options['expire'])){
 				$this->expire = $options['expire'];
 			}
+
 			$this->offset = 0;
 			if(isset($options['offset'])){
 				$this->offset = $options['offset'];
 			}
+
 			$this->retry = false;
 			if(isset($options['retry'])){
 				$this->retry = $options['retry'];
 			}
+
 			$this->history_limit = 100;
 			if(isset($options['limit'])){
 				$this->history_limit = $options['limit'];
 			}
+
 			$this->container = $_SERVER['DOCUMENT_ROOT'] . '/_cache/';
 			if(isset($options['container'])){
-				$this->container = $options['container'];
+				$this->container = self::path($_SERVER['DOCUMENT_ROOT'],$options['container']);
 			}
+			if(isset($options['container_path'])){
+				$this->container = $options['container_path'];
+			}
+
 		}
 
 		// URL option
