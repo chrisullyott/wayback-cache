@@ -7,7 +7,12 @@ A PHP class for intelligently caching and cataloging a history of data. Helpful 
 <?php require_once("cache.class.php"); ?>
 <?php
 
-	$object = new Cache($options);
+	$object = new Cache(array(
+  	'container' => 'webcache',
+  	'key' => 'instagram_feed',
+  	'expire' => 'hourly',
+  	'limit' => 10
+	));
 	
 	$data = $object->get($url);
 	
@@ -20,9 +25,9 @@ See also: http://chrisullyott.com/blog/2014-11-24-wayback-cache/
 
 ## Initialization
 
-### container _(string)_
+### container / container_path _(string)_
 
-The path to the parent cache directory, where this cache instance will be stored. Default is `/_cache`.
+Sets the path to the parent cache directory, where this cache instance will be stored. If the path does not exist, it is created. While the default path is `/_cache`, you can use `container` to write a path relative to DOCUMENT_ROOT or `container_path` to write out the full path yourself.
 
 ### key _(string)_
 
@@ -43,9 +48,7 @@ monthly					| Every first of the month at midnight
 
 ### offset _(integer)_
 
-The number of additional seconds to add to the expiration time. The default is `0`. 
-
-For example, to make the cache expire at 2:00 am, use `nightly` and `2`.
+Pushes back the expiration time by a number of seconds. For example, to make the cache expire at 2:00 am, use `nightly` and the value of `2 * 60 * 60`. The default is `0`.
 
 ### retry _(boolean)_
 
