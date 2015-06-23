@@ -18,7 +18,7 @@
 		"container" => "cache",
 		"key" => "breezeometer",
 		"expire" => "minute",
-		"limit" => 3
+		"limit" => 5
 	));
 	$breeze = $breeze_data->get($endpoint);
 	$breeze = json_decode($breeze, true);
