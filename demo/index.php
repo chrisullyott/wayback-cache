@@ -15,7 +15,7 @@
 	// Cache
 	include("../src/cache.class.php");
 	$breeze_data = new Cache(array(
-		"container" => "cache",
+		"container_path" => "cache",
 		"key" => "breezeometer",
 		"expire" => "minute",
 		"limit" => 5
