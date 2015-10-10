@@ -25,9 +25,13 @@ See also: http://chrisullyott.com/blog/2014-11-24-wayback-cache/
 
 ## Initialization
 
-### container / container_path _(string)_
+### container _(string)_
 
-Sets the path to the parent cache directory, where this cache instance will be stored. If the path does not exist, it is created. While the default path is `/_cache`, you can use `container` to write a path relative to DOCUMENT_ROOT or `container_path` to write out the full path yourself.
+Sets the path to the parent cache directory, where this cache instance will be stored. If the path does not exist, it is created. This path is relative to the document root. The default is `_cache`.
+
+### container_path _(string)_
+
+Similar to `container` but accepts a full path.
 
 ### key _(string)_
 
@@ -62,6 +66,14 @@ If after all attempts either of these are still true, the previous history state
 ### limit _(integer)_
 
 Sets the number of history states that are saved. Once the cache has stored this many states, the oldest one is deleted to make way for new data. Default is `100` history states.
+
+### mustMatch _(string)_
+
+A regular expression pattern which incoming data must match in order for the cache to be updated. Example: `/<img/`
+
+### mustNotMatch _(string)_
+
+A regular expression pattern which incoming data _must not match_ in order for the cache to be updated. Example: `/error/`
 
 ## Methods
 

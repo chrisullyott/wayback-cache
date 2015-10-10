@@ -13,10 +13,8 @@
 
 class Cache
 {
-    /* !TO-DO */
-    // 1. Define the list of catalog data points as a global variable for other methods to use (make checking for a congruent cache more straightforward).
 
-    /* !WISH-LIST */
+    /* !TO-DO */
     // 1. Build a CSV, graph, or any other kind of human-readable report for what is happening in a cache.
     // 2. Add timezone support.
     // 3. Catch errors in a handy log.
@@ -52,6 +50,11 @@ class Cache
                 $this->mustMatch = $options['mustMatch'];
             }
 
+            $this->mustNotMatch = '';
+            if (isset($options['mustNotMatch'])) {
+                $this->mustNotMatch = $options['mustNotMatch'];
+            }
+
             $this->offset = 0;
             if (isset($options['offset'])) {
                 $this->offset = $options['offset'];
@@ -83,6 +86,7 @@ class Cache
           'key',
           'expire',
           'mustMatch',
+          'mustNotMatch',
           'data_prefix'
         );
 
@@ -157,6 +161,11 @@ class Cache
 
             // if new data doesn't match expected pattern, return last and skip writing history
             if ($this->mustMatch && preg_match($this->mustMatch, $data) == 0) {
+                return $last_data;
+            }
+
+            // if new data doesn't match expected pattern, return last and skip writing history
+            if ($this->mustNotMatch && preg_match($this->mustNotMatch, $data) == 1) {
                 return $last_data;
             }
 
