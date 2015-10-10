@@ -65,54 +65,17 @@ Sets the number of history states that are saved. Once the cache has stored this
 
 ## Methods
 
-### read()
-
-Retrieves the latest data from the cache; returns `false` if expired.
-
-### write()
-
-Stores data by logging a new history state and updates the cache expiration time.
-
 ### get()
 
-A combination of `read()` and `write()`. Reads the latest data from the cache. If the cache is expired, data from `$url` is fetched and a new history state is created with the result. The new data is returned.
+Reads the latest data from the cache. If the cache is expired, data from `$url` is fetched and a new history state is created with the result. The new data is returned.
 
 ## Query strings
-
-### ?expireCache
-
-No matter the current expiration time, the current cache is expired and updated with a new history state.
 
 ### ?clearCache
 
 The cache is first erased and then set up again with one new history state.
 
 ## Examples
-
-### read + write
-
-```
-<?php require_once("cache.class.php"); ?>
-<?php
-
-	$photo_cache = new Cache(array('key' => 'instagram_feed'));
-
-	$photos = $photo_cache->read();
-	
-	if(!$photos){
-		
-		$photos = [process new data...]
-		
-		$photo_cache->write($photos);
-		
-	}
-	
-	echo $photos;
-
-?>
-```
-
-### get
 
 ```
 <?php require_once("cache.class.php"); ?>

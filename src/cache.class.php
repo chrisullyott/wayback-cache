@@ -7,7 +7,7 @@
 *
 * @author Chris Ullyott
 * @created November 2014
-* @version 1.9.2
+* @version 2.0.0
 *
 */
 
@@ -78,7 +78,7 @@ class Cache
         }
 
         // Congruency points
-        $this->congruencyPoints = array(
+        $this->congruentParams = array(
           'container',
           'key',
           'expire',
@@ -109,67 +109,6 @@ class Cache
         $this->init_cache();
     }
 
-
-    /* !READ METHOD */
-
-    // Read the latest entry if valid or return false.
-
-    public function read()
-    {
-        $catalog = $this->get_catalog();
-
-        if (!$this->is_congruent_cache($catalog)) {
-            return false;
-        }
-
-        $data = false;
-        if (($this->current_time < $catalog['expire_time'])) {
-            $data = $this->read_file($this->path($this->cache_path, $catalog['history'][0]['file']));
-        }
-
-        return $data;
-    }
-
-    /* !WRITE METHOD */
-
-    // Write $data to the cache and create a new history state.
-
-    public function write($data = '')
-    {
-        if ($data != '') {
-            $catalog = $this->get_catalog();
-            $history_states = $catalog['history'];
-
-            // store a history state
-            $history_file = $this->available_filename($this->cache_path, $this->data_prefix.'_'.date('Ymd'));
-            $this->create_file($this->path($this->cache_path, $history_file), $data);
-
-            // log a history state
-            $history_states = $this->update_history($history_states, array(
-                    'file' => $history_file,
-                    'date' => date('r', $this->current_time),
-                    'time' => $this->current_time,
-                    'size' => strlen($data),
-                ));
-
-            // delete old states
-            $history_preserved = $this->curate_history($history_states);
-
-            // update the catalog
-            $this->update_catalog(array(
-                    'expire_freq' => $this->expire,
-                    'expire_offset' => $this->offset,
-                    'expire_date' => $this->expire_time($this->expire, $this->offset),
-                    'expire_time' => strtotime($this->expire_time($this->expire, $this->offset)),
-                    'last_date' => date('r', $this->current_time),
-                    'last_time' => $this->current_time,
-                    'history' => $history_preserved,
-                ));
-
-            // return the data
-            return $data;
-        }
-    }
 
     /* !GET METHOD */
 
@@ -250,7 +189,7 @@ class Cache
             // make cache congruent, while still using existing history states
             if (!$this->is_congruent_cache($catalog)) {
                 $obj_vars = get_object_vars($this);
-                foreach ($this->congruencyPoints as $var) {
+                foreach ($this->congruentParams as $var) {
                     $catalog_updates[$var] = $obj_vars[$var];
                 }
             }
@@ -380,7 +319,7 @@ class Cache
     public function is_congruent_cache($catalog)
     {
         $is_congruent = true;
-        foreach ($this->congruencyPoints as $c) {
+        foreach ($this->congruentParams as $c) {
             if ($catalog[$c] !== $this->$c) {
                 return false;
             }
@@ -398,7 +337,7 @@ class Cache
         if ($expire == 'second') {
             $time = date($format, strtotime('+1 second', strtotime(date('Y-m-d H:i:s'))));
         } elseif ($expire == '30-second') {
-            $time = date($format, strtotime('+30 seconds', strtotime(date('Y-m-d H:i:00'))));
+            $time = date($format, strtotime('+30 seconds', strtotime(date('Y-m-d H:i:s'))));
         } elseif ($expire == 'minute') {
             $time = date($format, strtotime('+1 minute', strtotime(date('Y-m-d H:i:00'))));
         } elseif ($expire == 'hourly') {
