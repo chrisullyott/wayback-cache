@@ -329,7 +329,7 @@ class Cache
     {
         $is_congruent = true;
         foreach ($this->congruentParams as $c) {
-            if ($catalog[$c] !== $this->$c) {
+            if (!isset($catalog[$c]) || ($catalog[$c] !== $this->$c)) {
                 return false;
             }
         }
