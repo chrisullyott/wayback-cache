@@ -48,6 +48,11 @@ class Cache
                 $this->expire = $options['expire'];
             }
 
+            $this->mustMatch = '';
+            if (isset($options['mustMatch'])) {
+                $this->mustMatch = $options['mustMatch'];
+            }
+
             $this->offset = 0;
             if (isset($options['offset'])) {
                 $this->offset = $options['offset'];
@@ -81,6 +86,7 @@ class Cache
         $this->container = $this->path($this->container);
         $this->cache_path = $this->path($this->container, $this->key);
         $this->catalog_path = $this->path($this->cache_path, '.catalog');
+        $this->dump_path = $this->path($this->cache_path, '.catalog_dump');
 
         // Forcibly invalidate the cache
         $this->userExpired = false;
@@ -165,7 +171,7 @@ class Cache
 
     /* !GET METHOD */
 
-    // Read the latest entry, or make attempts to retrieve the data from the $url.
+    // Read the latest entry, or make attempts to retrieve the data.
 
     public function get($url)
     {
@@ -200,8 +206,13 @@ class Cache
                 $data = $this->get_data($url);
             }
 
-            // if new data is NULL, return last and skip writing to history
+            // if new data is NULL, return last and skip writing history
             if (!$data) {
+                return $last_data;
+            }
+
+            // if new data doesn't match expected pattern, return last and skip writing history
+            if ($this->mustMatch && preg_match($this->mustMatch, $data)==0) {
                 return $last_data;
             }
 
@@ -283,6 +294,7 @@ class Cache
         $catalog['history'] = $data['history'];
         $catalog['history_count'] = count($data['history']);
         $this->write_file($this->catalog_path, json_encode($catalog));
+        $this->write_file($this->dump_path, print_r($catalog, true));
 
         return true;
     }
