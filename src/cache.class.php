@@ -7,7 +7,7 @@
 *
 * @author Chris Ullyott
 * @created November 2014
-* @version 1.9.1
+* @version 1.9.2
 *
 */
 
@@ -15,8 +15,6 @@ class Cache
 {
     /* !TO-DO */
     // 1. Define the list of catalog data points as a global variable for other methods to use (make checking for a congruent cache more straightforward).
-    // 2. Instead of defining all of the variables to store in the catalog, gather them up automatically somehow
-
 
     /* !WISH-LIST */
     // 1. Build a CSV, graph, or any other kind of human-readable report for what is happening in a cache.
@@ -73,10 +71,20 @@ class Cache
             if (isset($options['container'])) {
                 $this->container = self::path($_SERVER['DOCUMENT_ROOT'], $options['container']);
             }
+
             if (isset($options['container_path'])) {
                 $this->container = $options['container_path'];
             }
         }
+
+        // Congruency points
+        $this->congruencyPoints = array(
+          'container',
+          'key',
+          'expire',
+          'mustMatch',
+          'data_prefix'
+        );
 
         // URL option
         if ($this->key == 'url') {
@@ -121,7 +129,6 @@ class Cache
 
         return $data;
     }
-
 
     /* !WRITE METHOD */
 
@@ -184,8 +191,10 @@ class Cache
             }
         }
 
-        // data has expired
-        if (!$data || !$this->is_congruent_cache($catalog)) {
+        // data has expired or cache config is different
+        if (!$data) {
+
+            // make new request
             if ($this->retry) {
 
                 // multiple fetch attempts
@@ -201,13 +210,14 @@ class Cache
                 $data = $this->get_data($url);
             }
 
+
             // if new data is NULL, return last and skip writing history
             if (!$data) {
                 return $last_data;
             }
 
             // if new data doesn't match expected pattern, return last and skip writing history
-            if ($this->mustMatch && preg_match($this->mustMatch, $data)==0) {
+            if ($this->mustMatch && preg_match($this->mustMatch, $data) == 0) {
                 return $last_data;
             }
 
@@ -236,13 +246,16 @@ class Cache
                     'last_time' => $this->current_time,
                     'history' => $history_preserved
               );
+
+            // make cache congruent, while still using existing history states
             if (!$this->is_congruent_cache($catalog)) {
-                foreach (get_object_vars($this) as $key => $var) {
-                    $catalog_updates[$key] = $var;
+                $obj_vars = get_object_vars($this);
+                foreach ($this->congruencyPoints as $var) {
+                    $catalog_updates[$var] = $obj_vars[$var];
                 }
             }
-            $this->update_catalog($catalog_updates);
 
+            $this->update_catalog($catalog_updates);
         }
 
         return $data;
@@ -274,7 +287,7 @@ class Cache
             'last_date' => date('r', $this->current_time),
             'last_time' => $this->current_time,
             'created_date' => date('r', $this->current_time),
-            'created_time' => $this->current_time
+            'created_time' => $this->current_time,
           )
         );
         $catalog['history'] = array();
@@ -366,24 +379,15 @@ class Cache
     // check if cache configuration is congruent with this object
     public function is_congruent_cache($catalog)
     {
-        $checkPoints = array(
-          'container',
-          'key',
-          'expire',
-          'mustMatch',
-          'data_prefix'
-        );
-
         $is_congruent = true;
-        foreach ($checkPoints as $c) {
-          if ($catalog[$c] !== $this->$c) {
-            file_put_contents($_SERVER['DOCUMENT_ROOT'] . '/__debug.log', print_r('not congruent!',true));
-
-            return false;
-          }
+        foreach ($this->congruencyPoints as $c) {
+            if ($catalog[$c] !== $this->$c) {
+                return false;
+            }
         }
 
         return $is_congruent;
+
     }
 
     // generate expiration time
@@ -393,6 +397,8 @@ class Cache
         $format = 'r';
         if ($expire == 'second') {
             $time = date($format, strtotime('+1 second', strtotime(date('Y-m-d H:i:s'))));
+        } elseif ($expire == '30-second') {
+            $time = date($format, strtotime('+30 seconds', strtotime(date('Y-m-d H:i:00'))));
         } elseif ($expire == 'minute') {
             $time = date($format, strtotime('+1 minute', strtotime(date('Y-m-d H:i:00'))));
         } elseif ($expire == 'hourly') {
@@ -419,7 +425,6 @@ class Cache
         return $time;
     }
 
-
     /* !LOW-LEVEL FUNCTIONS */
 
     // write a full path from a list of parts
@@ -428,9 +433,9 @@ class Cache
         $path = '';
         foreach (func_get_args() as $key => $p) {
             if ($key == 0) {
-                $path .= rtrim($p, '/') . '/';
+                $path .= rtrim($p, '/').'/';
             } else {
-                $path .= trim($p, '/') . '/';
+                $path .= trim($p, '/').'/';
             }
         }
 
@@ -479,7 +484,7 @@ class Cache
                 return false;
             }
         } else {
-          return true;
+            return true;
         }
     }
 
@@ -495,7 +500,7 @@ class Cache
                 return false;
             }
         } else {
-          return true;
+            return true;
         }
     }
 
@@ -504,7 +509,7 @@ class Cache
     {
         if (!file_exists($filepath)) {
             if (self::create_file($filepath, $contents, $perms)) {
-              return true;
+                return true;
             }
         } else {
             if (!is_writable($filepath)) {

@@ -11,14 +11,13 @@
 	$lon = '-118.018911';
 	$endpoint = "http://api-beta.breezometer.com/baqi/?key=$api_key&lat=$lat&lon=$lon";
 
-
 	// Cache
 	include("../src/cache.class.php");
 	$breeze_data = new Cache(array(
 		"container_path" => "cache",
 		"key" => "breezeometer",
 		"expire" => "minute",
-		"mustMatch" => "/country_name/",
+		"mustMatch" => "/country/",
 		"limit" => 5
 	));
 	$breeze = $breeze_data->get($endpoint);
