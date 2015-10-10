@@ -17,8 +17,8 @@
 	$breeze_data = new Cache(array(
 		"container_path" => "cache",
 		"key" => "breezeometer",
-		"mustMatch" => "/country/i",
 		"expire" => "minute",
+		"mustMatch" => "/country_name/",
 		"limit" => 5
 	));
 	$breeze = $breeze_data->get($endpoint);

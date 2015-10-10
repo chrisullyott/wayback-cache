@@ -7,7 +7,7 @@
 *
 * @author Chris Ullyott
 * @created November 2014
-* @version 1.9
+* @version 1.9.1
 *
 */
 
@@ -15,6 +15,7 @@ class Cache
 {
     /* !TO-DO */
     // 1. Define the list of catalog data points as a global variable for other methods to use (make checking for a congruent cache more straightforward).
+    // 2. Instead of defining all of the variables to store in the catalog, gather them up automatically somehow
 
 
     /* !WISH-LIST */
@@ -88,12 +89,6 @@ class Cache
         $this->catalog_path = $this->path($this->cache_path, '.catalog');
         $this->dump_path = $this->path($this->cache_path, '.catalog_dump');
 
-        // Forcibly invalidate the cache
-        $this->userExpired = false;
-        if (isset($_GET['expireCache'])) {
-            $this->userExpired = true;
-        }
-
         // Clear the cache
         if (isset($_GET['clearCache'])) {
             self::deleteDir($this->cache_path);
@@ -120,7 +115,7 @@ class Cache
         }
 
         $data = false;
-        if (($this->current_time < $catalog['expire_time']) && !$this->userExpired) {
+        if (($this->current_time < $catalog['expire_time'])) {
             $data = $this->read_file($this->path($this->cache_path, $catalog['history'][0]['file']));
         }
 
@@ -184,7 +179,7 @@ class Cache
         // data is not expired
         if ($history_states) {
             $last_data = $this->read_history($history_states);
-            if (($this->current_time < $catalog['expire_time']) && !$this->userExpired) {
+            if (($this->current_time < $catalog['expire_time'])) {
                 $data = $last_data;
             }
         }
@@ -232,15 +227,22 @@ class Cache
             $history_preserved = $this->curate_history($history_states);
 
             // update the catalog
-            $this->update_catalog(array(
+            $catalog_updates = array(
                     'expire_freq' => $this->expire,
                     'expire_offset' => $this->offset,
                     'expire_date' => $this->expire_time($this->expire, $this->offset),
                     'expire_time' => strtotime($this->expire_time($this->expire, $this->offset)),
                     'last_date' => date('r', $this->current_time),
                     'last_time' => $this->current_time,
-                    'history' => $history_preserved,
-                ));
+                    'history' => $history_preserved
+              );
+            if (!$this->is_congruent_cache($catalog)) {
+                foreach (get_object_vars($this) as $key => $var) {
+                    $catalog_updates[$key] = $var;
+                }
+            }
+            $this->update_catalog($catalog_updates);
+
         }
 
         return $data;
@@ -263,20 +265,19 @@ class Cache
     // create a catalog
     public function init_catalog()
     {
-        $catalog = array(
-            'key' => $this->key,
-            'expire_freq' => $this->expire,
-            'expire_offset' => $this->offset,
+        $catalog = array();
+        $catalog = array_merge(
+          get_object_vars($this),
+          array(
             'expire_date' => $this->expire_time($this->expire, $this->offset),
             'expire_time' => strtotime($this->expire_time($this->expire, $this->offset)),
             'last_date' => date('r', $this->current_time),
             'last_time' => $this->current_time,
             'created_date' => date('r', $this->current_time),
-            'created_time' => $this->current_time,
-            'history_limit' => $this->history_limit,
-            'history_count' => 0,
-            'history' => array(),
+            'created_time' => $this->current_time
+          )
         );
+        $catalog['history'] = array();
 
         return json_encode($catalog);
     }
@@ -292,7 +293,6 @@ class Cache
         }
         unset($catalog['history']);
         $catalog['history'] = $data['history'];
-        $catalog['history_count'] = count($data['history']);
         $this->write_file($this->catalog_path, json_encode($catalog));
         $this->write_file($this->dump_path, print_r($catalog, true));
 
@@ -363,18 +363,24 @@ class Cache
         return $is_valid;
     }
 
-    // check if cache is congruent with this object
+    // check if cache configuration is congruent with this object
     public function is_congruent_cache($catalog)
     {
-        $is_congruent = false;
-        if ($catalog) {
-            if (($catalog['key'] == $this->key) &&
-                ($catalog['expire_offset'] == $this->offset) &&
-                ($catalog['expire_freq'] == $this->expire) &&
-                ($catalog['history_limit'] == $this->history_limit)
-            ) {
-                $is_congruent = true;
-            }
+        $checkPoints = array(
+          'container',
+          'key',
+          'expire',
+          'mustMatch',
+          'data_prefix'
+        );
+
+        $is_congruent = true;
+        foreach ($checkPoints as $c) {
+          if ($catalog[$c] !== $this->$c) {
+            file_put_contents($_SERVER['DOCUMENT_ROOT'] . '/__debug.log', print_r('not congruent!',true));
+
+            return false;
+          }
         }
 
         return $is_congruent;
