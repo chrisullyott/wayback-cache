@@ -13,9 +13,9 @@ A PHP class for intelligently caching and cataloging a history of data. Helpful 
   	'expire' => 'hourly',
   	'limit' => 10
 	));
-	
+
 	$data = $object->get($url);
-	
+
 	echo $data;
 
 ?>
@@ -36,8 +36,6 @@ Similar to `container` but accepts a full path.
 ### key _(string)_
 
 The identifier (or purpose) of this specific cache instance (ie, `instagram_feed` or `weather_data`).
-
-Set to `url` to use a key generated from the page's current URL.
 
 ### expiration _(string)_
 
