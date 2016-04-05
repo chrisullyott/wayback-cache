@@ -20,11 +20,6 @@ class Cache
     // 3. Catch errors in a handy log.
 
 
-    /* !GLOBAL DEFAULTS */
-
-    private $data_prefix = '.data';
-
-
     /* !CONSTRUCT OBJECT */
 
     public function __construct($options)
@@ -86,8 +81,7 @@ class Cache
           'key',
           'expire',
           'mustMatch',
-          'mustNotMatch',
-          'data_prefix'
+          'mustNotMatch'
         );
 
         // URL option
@@ -170,7 +164,7 @@ class Cache
             }
 
             // store a history state
-            $history_file = $this->available_filename($this->cache_path, $this->data_prefix.'_'.date('Ymd'));
+            $history_file = $this->available_filename($this->cache_path, '_' . date('Ymd'));
             $this->create_file($this->path($this->cache_path, $history_file), $data);
 
             // log a history state
@@ -296,7 +290,7 @@ class Cache
     // preserve + discard history items
     public function curate_history($history_states)
     {
-        $history_files = $this->list_files($this->cache_path, $this->data_prefix.'*');
+        $history_files = $this->list_files($this->cache_path, '*');
         $history_preserved = $history_states;
         if ($this->history_limit) {
             $history_preserved = array_slice($history_states, 0, $this->history_limit);
