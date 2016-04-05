@@ -67,7 +67,6 @@ class Cache
         $this->container = $this->path($_SERVER['DOCUMENT_ROOT'] . $this->container);
         $this->cache_path = $this->path($this->container, $this->key);
         $this->catalog_path = $this->path($this->cache_path, '.catalog');
-        $this->dump_path = $this->path($this->cache_path, '.catalog_dump');
 
         // Clear the cache
         if (isset($_GET['clearCache'])) {
@@ -223,7 +222,6 @@ class Cache
         unset($catalog['history']);
         $catalog['history'] = $data['history'];
         $this->write_file($this->catalog_path, json_encode($catalog));
-        $this->write_file($this->dump_path, print_r($catalog, true));
 
         return true;
     }
