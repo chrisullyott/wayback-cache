@@ -496,19 +496,16 @@ class Cache
         return $str;
     }
 
-    // get_data() via David Walsh (http://davidwalsh.name/curl-download)
+    // fetch data with cURL
     public function get_data($url)
     {
         $ch = curl_init();
-        $timeout = 5;
         curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
         $data = curl_exec($ch);
         curl_close($ch);
-        if (!$data) {
-            $data = file_get_contents($url); // fallback
-        }
 
         return $data;
     }
