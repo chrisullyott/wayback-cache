@@ -19,59 +19,33 @@ class Cache
     // 2. Add timezone support.
     // 3. Catch errors in a handy log.
 
+    /* !PROPERTIES */
+    private $key = 'default';
+    private $expire = 'nightly';
+    private $mustMatch = null;
+    private $mustNotMatch = null;
+    private $offset = 0;
+    private $retry = false;
+    private $limit = 10;
+    private $container;
+    private $container_path; 
+    private $current_time;
+
 
     /* !CONSTRUCT OBJECT */
 
-    public function __construct($options)
+    public function __construct($args)
     {
 
         // What time is it?  |(• ◡•)|/ \(❍ᴥ❍ʋ)
         $this->current_time = strtotime('now');
 
-        // Vars as array
-        if (is_array($options)) {
-            $this->key = 'default';
-            if (isset($options['key'])) {
-                $this->key = $options['key'];
-            }
-
-            $this->expire = 'nightly';
-            if (isset($options['expire'])) {
-                $this->expire = $options['expire'];
-            }
-
-            $this->mustMatch = '';
-            if (isset($options['mustMatch'])) {
-                $this->mustMatch = $options['mustMatch'];
-            }
-
-            $this->mustNotMatch = '';
-            if (isset($options['mustNotMatch'])) {
-                $this->mustNotMatch = $options['mustNotMatch'];
-            }
-
-            $this->offset = 0;
-            if (isset($options['offset'])) {
-                $this->offset = $options['offset'];
-            }
-
-            $this->retry = false;
-            if (isset($options['retry'])) {
-                $this->retry = $options['retry'];
-            }
-
-            $this->history_limit = 100;
-            if (isset($options['limit'])) {
-                $this->history_limit = $options['limit'];
-            }
-
-            $this->container = $_SERVER['DOCUMENT_ROOT'].'/_cache/';
-            if (isset($options['container'])) {
-                $this->container = self::path($_SERVER['DOCUMENT_ROOT'], $options['container']);
-            }
-
-            if (isset($options['container_path'])) {
-                $this->container = $options['container_path'];
+        // Set all properties
+        if (is_array($args)) {
+            foreach($args as $key => $val) {
+                if(isset($this->{$key})) {
+                    $this->{$key} = $val;
+                }
             }
         }
 
@@ -90,7 +64,7 @@ class Cache
         }
 
         // Set paths
-        $this->container = $this->path($this->container);
+        $this->container = $this->path($_SERVER['DOCUMENT_ROOT'] . $this->container);
         $this->cache_path = $this->path($this->container, $this->key);
         $this->catalog_path = $this->path($this->cache_path, '.catalog');
         $this->dump_path = $this->path($this->cache_path, '.catalog_dump');
