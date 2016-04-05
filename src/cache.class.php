@@ -7,7 +7,7 @@
 *
 * @author Chris Ullyott
 * @created November 2014
-* @version 2.0.0
+* @version 2.1
 *
 */
 
@@ -63,11 +63,6 @@ class Cache
           'mustNotMatch'
         );
 
-        // URL option
-        if ($this->key == 'url') {
-            $this->key = self::url_dirname();
-        }
-
         // Set up paths
         if (!$this->container_path) {
             $this->container_path = $this->path($_SERVER['DOCUMENT_ROOT'], $this->container);
@@ -115,13 +110,13 @@ class Cache
                 $attempt = 0;
                 $attempt_max = 2;
                 while (($data == '' || $data == $last_data) && ($attempt < $attempt_max)) {
-                    $data = $this->get_data($url);
+                    $data = $this->fetch_data($url);
                     ++$attempt;
                 }
             } else {
 
                 // single fetch attempt
-                $data = $this->get_data($url);
+                $data = $this->fetch_data($url);
             }
 
 
@@ -363,15 +358,6 @@ class Cache
         return rtrim($path, '/');
     }
 
-    // generate a directory name from the current URL
-    // http://www.cyberciti.biz/faq/linuxunix-rules-for-naming-file-and-directory-names/
-    public function url_dirname()
-    {
-        $url_dirname = 'url_'.substr(urlencode($_SERVER['REQUEST_URI']), 0, 250);
-
-        return $url_dirname;
-    }
-
     // list the files in a directory
     public function list_files($dir, $pattern)
     {
@@ -497,7 +483,7 @@ class Cache
     }
 
     // fetch data with cURL
-    public function get_data($url)
+    public function fetch_data($url)
     {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);

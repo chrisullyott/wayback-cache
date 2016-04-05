@@ -9,7 +9,8 @@
 	include('../src/cache.class.php');
 	$pageCache = new Cache(array(
 		'container' => 'cache',
-		'key' => 'blog'
+		'key' => 'blog',
+		'expire' => 'hourly'
 	));
 
 	// Make request
