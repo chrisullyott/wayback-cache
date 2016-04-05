@@ -20,15 +20,20 @@ class Cache
     // 3. Catch errors in a handy log.
 
     /* !PROPERTIES */
+
     private $key = 'default';
     private $expire = 'nightly';
     private $mustMatch = null;
     private $mustNotMatch = null;
     private $offset = 0;
     private $retry = false;
-    private $limit = 10;
-    private $container;
-    private $container_path; 
+    private $history_limit = 10;
+    private $container = '/_cache';
+
+    private $container_path;
+    private $cache_path;
+    private $catalog_path;
+
     private $current_time;
 
 
@@ -63,9 +68,11 @@ class Cache
             $this->key = self::url_dirname();
         }
 
-        // Set paths
-        $this->container = $this->path($_SERVER['DOCUMENT_ROOT'] . $this->container);
-        $this->cache_path = $this->path($this->container, $this->key);
+        // Set up paths
+        if (!$this->container_path) {
+            $this->container_path = $this->path($_SERVER['DOCUMENT_ROOT'], $this->container);
+        }
+        $this->cache_path = $this->path($this->container_path, $this->key);
         $this->catalog_path = $this->path($this->cache_path, '.catalog');
 
         // Clear the cache
@@ -73,10 +80,7 @@ class Cache
             self::deleteDir($this->cache_path);
         }
 
-        // Initialize container directory
-        $this->create_dir($this->container);
-
-        // Initialize cache directory
+        // Initialize cache
         $this->init_cache();
     }
 
@@ -137,7 +141,7 @@ class Cache
             }
 
             // store a history state
-            $history_file = $this->available_filename($this->cache_path, '_' . date('Ymd'));
+            $history_file = $this->availableFilename($this->cache_path, date('Ymd'));
             $this->create_file($this->path($this->cache_path, $history_file), $data);
 
             // log a history state
@@ -342,14 +346,17 @@ class Cache
     /* !LOW-LEVEL FUNCTIONS */
 
     // write a full path from a list of parts
-    public function path()
+    public static function path()
     {
         $path = '';
+
+        $s = DIRECTORY_SEPARATOR;
+
         foreach (func_get_args() as $key => $p) {
             if ($key == 0) {
-                $path .= rtrim($p, '/').'/';
+                $path .= rtrim($p, $s) . $s;
             } else {
-                $path .= trim($p, '/').'/';
+                $path .= trim($p, $s) . $s;
             }
         }
 
@@ -450,23 +457,43 @@ class Cache
         return $new_array;
     }
 
-    // generate a filename available within a directory
-    public function available_filename($dir_path, $prefix = '', $extension = '')
+    /**
+    * Generate a filename available within a directory
+    */
+    public static function availableFilename($directory, $prefix = '', $extension = '')
     {
-        if ($prefix) {
-            $prefix = $prefix.'_';
-        }
-        if ($extension) {
-            $extension = '.'.trim($extension, '.');
-        }
-        $name = $prefix.rand(100000, 999999);
-        $path = $this->path($dir_path, $name);
-        while (file_exists($path)) {
-            $name = $prefix.rand(100000, 999999);
-            $path = $this->path($dir_path, $name);
-        }
+    if ($prefix) {
+      $prefix = $prefix . '_';
+    }
+    if ($extension) {
+      $extension = '.' . trim($extension, '.');
+    }
+    $name = $prefix . self::randomString();
+    $path = self::path($directory, $name);
+    while (file_exists($path)) {
+      $name = $prefix . self::randomString();
+      $path = self::path($directory, $name);
+    }
+    return $name;
+    }
 
-        return $name;
+    /**
+    * Generate a random string
+    */
+    public static function randomString($length = 15, $numeric = false)
+    {
+        $str = '';
+        if ($numeric) {
+          $sessionaracters = array_merge(range('0', '9'));
+        } else {
+          $sessionaracters = array_merge(range('A', 'Z'), range('a', 'z'), range('0', '9'));
+        }
+        $max = count($sessionaracters) - 1;
+        for ($i = 0; $i < $length; $i++) {
+          $rand = mt_rand(0, $max);
+          $str .= $sessionaracters[$rand];
+        }
+        return $str;
     }
 
     // get_data() via David Walsh (http://davidwalsh.name/curl-download)

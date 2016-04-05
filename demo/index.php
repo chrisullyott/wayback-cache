@@ -3,24 +3,20 @@
 	ini_set('display_errors', 1);
 	header('Content-Type: text/plain');
 
-	// Free Geolocation API
-	// https://freegeoip.net/
-	$endpoint = 'http://chrisullyott.com/blog/2014-12-29-valley-of-fire/';
+	$page = 'http://chrisullyott.com/blog/2014-12-29-valley-of-fire/';
 
 	// Instantiate class
 	include('../src/cache.class.php');
-	$geoIP = new Cache(array(
+	$pageCache = new Cache(array(
 		'container' => 'cache',
-		'key' => 'geoip',
-		'expire' => 'hourly',
-		'limit' => 10
+		'key' => 'blog',
+		'expire' => 'hourly'
 	));
 
 	// Make request
-	$geoIp = $geoIP->get($endpoint);
-	$geoIp = json_decode($geoIp, true);
+	$pageCache = $pageCache->get($page);
 
 	// Output
-	print_r($geoIp);
+	print_r($pageCache);
 
 ?>
