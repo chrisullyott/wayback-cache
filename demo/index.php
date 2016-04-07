@@ -1,22 +1,19 @@
+<?php require_once('../src/Cache.class.php'); ?>
 <?php
 
 	ini_set('display_errors', 1);
-	header('Content-Type: text/plain');
+    header('Content-Type: application/json');
 
-	$page = 'http://chrisullyott.com/blog/2014-12-29-valley-of-fire';
+    $requestUrl = 'http://ip-api.com/json/wired.com';
 
-	// Instantiate class
-	include('../src/cache.class.php');
-	$pageCache = new Cache(array(
-		'container' => 'cache',
-		'key' => 'blog',
-		'expire' => 'hourly'
+	$cacheInstance = new Cache(array(
+        'url'    => $requestUrl,
+      	'key'    => 'ip_lookup',
+        'expire' => 'hourly'
 	));
 
-	// Make request
-	$pageCache = $pageCache->get($page);
+	$ipData = $cacheInstance->get();
 
-	// Output
-	print_r($pageCache);
+	echo $ipData;
 
 ?>

@@ -1,22 +1,23 @@
 Wayback Cache
 ===============
 
-A PHP class for intelligently caching and cataloging a history of data. Helpful when needing to cache content from third-party API's and fall back to previous versions if necessary.
+A PHP class for intelligently requesting and cataloging a history of data. Helpful when needing to cache requests from third-party API's and fall back to previous data if a new request is unsuccessful.
 
 ```
-<?php require_once("cache.class.php"); ?>
+<?php require_once('Cache.class.php'); ?>
 <?php
 
-	$object = new Cache(array(
-  	'container' => 'webcache',
-  	'key' => 'instagram_feed',
-  	'expire' => 'hourly',
-  	'limit' => 10
+    $requestUrl = 'http://ip-api.com/json/wired.com';
+
+	$cacheInstance = new Cache(array(
+        'url'    => $requestUrl,
+      	'key'    => 'ip_lookup',
+        'expire' => 'hourly'
 	));
 
-	$data = $object->get($url);
+	$ipData = $cacheInstance->get();
 
-	echo $data;
+	echo $ipData;
 
 ?>
 ```
@@ -35,11 +36,11 @@ Similar to `container` but accepts a full path.
 
 ### key _(string)_
 
-The identifier (or purpose) of this specific cache instance (ie, `instagram_feed` or `weather_data`).
+The identifier of this specific cache instance (i.e., `instagram_feed` or `weather_data`). This will be used for the name of a subdirectory inside the cache container directory.
 
 ### expiration _(string)_
 
-Value						| Cache expiration set
+Value					| Cache expiration set
 :----------				| :-----------
 second					| Every second
 minute					| Every minute
@@ -77,28 +78,10 @@ A regular expression pattern which incoming data _must not match_ in order for t
 
 ### get()
 
-Reads the latest data from the cache. If the cache is expired, data from `$url` is fetched and a new history state is created with the result. The new data is returned.
+Reads the latest data from the cache. If the cache is expired, data is fetched and a new history state is created with the response.
 
 ## Query strings
 
 ### ?clearCache
 
 The cache is first erased and then set up again with one new history state.
-
-## Examples
-
-```
-<?php require_once("cache.class.php"); ?>
-<?php
-
-	$article_cache = new Cache(array(
-		'key' => 'cnbc_article',
-		'expire' => 'hourly'
-	));
-
-	$article = $article_cache->get('http://www.cnbc.com/id/101618128');
-
-	echo $article;
-
-?>
-```

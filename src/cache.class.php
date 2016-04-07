@@ -1,175 +1,175 @@
 <?php
 
-/*
-* "Wayback" Cache
-*
-* Caches data while intelligently managing a history of previous states.
-*
-* @author Chris Ullyott
-* @created November 2014
-* @version 2.1
-*
-*/
+/**
+ * "Wayback" Cache
+ *
+ * Caches data while intelligently managing a history of previous states.
+ * Created November 2014.
+ *
+ * @author Chris Ullyott
+ * @version 2.2
+ */
 
 class Cache
 {
-
-    /* !TO-DO */
-    // 1. Build a CSV, graph, or any other kind of human-readable report for what is happening in a cache.
-    // 2. Add timezone support.
-    // 3. Catch errors in a handy log.
-
     /* !PROPERTIES */
 
+    // Cache
+    private $url;
     private $key = 'default';
     private $expire = 'nightly';
     private $mustMatch = null;
     private $mustNotMatch = null;
     private $offset = 0;
     private $retry = false;
-    private $history_limit = 10;
+    private $limit = 10;
+    private $currentTime;
+
+    // Authentication
+    private $username;
+    private $password;
+
+    // Paths
     private $container = '/_cache';
-
-    private $container_path;
-    private $cache_path;
-    private $catalog_path;
-
-    private $current_time;
+    private $containerPath;
+    private $cachePath;
+    private $catalogPath;
 
 
     /* !CONSTRUCT OBJECT */
 
     public function __construct($args)
     {
-
         // What time is it?  |(• ◡•)|/ \(❍ᴥ❍ʋ)
-        $this->current_time = strtotime('now');
+        $this->currentTime = strtotime('now');
 
         // Set all properties
         if (is_array($args)) {
             foreach($args as $key => $val) {
-                if(isset($this->{$key})) {
-                    $this->{$key} = $val;
-                }
+                $this->{$key} = $val;
             }
         }
 
         // Congruency points
         $this->congruentParams = array(
-          'container',
-          'key',
-          'expire',
-          'mustMatch',
-          'mustNotMatch'
+            'container',
+            'key',
+            'expire',
+            'mustMatch',
+            'mustNotMatch',
         );
 
         // Set up paths
-        if (!$this->container_path) {
-            $this->container_path = $this->path($_SERVER['DOCUMENT_ROOT'], $this->container);
+        if (!$this->containerPath) {
+            $this->containerPath = $this->path($_SERVER['DOCUMENT_ROOT'], $this->container);
         }
-        $this->cache_path = $this->path($this->container_path, $this->key);
-        $this->catalog_path = $this->path($this->cache_path, '.catalog');
+
+        $this->cachePath = $this->path($this->containerPath, $this->key);
+        $this->catalogPath = $this->path($this->cachePath, '.catalog');
 
         // Clear the cache
         if (isset($_GET['clearCache'])) {
-            self::deleteDir($this->cache_path);
+            self::deleteDir($this->cachePath);
         }
 
         // Initialize cache
-        $this->init_cache();
+        $this->initCache();
     }
 
 
     /* !GET METHOD */
 
     // Read the latest entry, or make attempts to retrieve the data.
-
-    public function get($url)
+    public function get()
     {
         $data = '';
-        $last_data = '';
+        $lastData = '';
 
-        $catalog = $this->get_catalog();
-        $history_states = $catalog['history'];
+        $catalog = $this->getCatalog();
+        $historyStates = $catalog['history'];
 
         // data is not expired
-        if ($history_states) {
-            $last_data = $this->read_history($history_states);
-            if (($this->current_time < $catalog['expire_time'])) {
-                $data = $last_data;
+        if ($historyStates) {
+            $lastData = $this->readHistory($historyStates);
+            if (($this->currentTime < $catalog['expire_time'])) {
+                $data = $lastData;
             }
         }
 
         // data has expired or cache config is different
         if (!$data) {
 
-            // make new request
+            // make a new request
             if ($this->retry) {
 
                 // multiple fetch attempts
                 $attempt = 0;
-                $attempt_max = 2;
-                while (($data == '' || $data == $last_data) && ($attempt < $attempt_max)) {
-                    $data = $this->fetch_data($url);
+                $attemptMax = 2;
+
+                while (($data == '' || $data == $lastData) && ($attempt < $attemptMax)) {
+                    $data = $this->fetchData($this->url);
                     ++$attempt;
                 }
+
             } else {
 
                 // single fetch attempt
-                $data = $this->fetch_data($url);
+                $data = $this->fetchData($this->url);
             }
 
 
             // if new data is NULL, return last and skip writing history
             if (!$data) {
-                return $last_data;
+                return $lastData;
             }
 
             // if new data doesn't match expected pattern, return last and skip writing history
             if ($this->mustMatch && preg_match($this->mustMatch, $data) == 0) {
-                return $last_data;
+                return $lastData;
             }
 
             // if new data doesn't match expected pattern, return last and skip writing history
             if ($this->mustNotMatch && preg_match($this->mustNotMatch, $data) == 1) {
-                return $last_data;
+                return $lastData;
             }
 
             // store a history state
-            $history_file = $this->availableFilename($this->cache_path, date('Ymd'));
-            $this->create_file($this->path($this->cache_path, $history_file), $data);
+            $historyFile = $this->availableFilename($this->cachePath, date('Ymd'));
+            $this->createFile($this->path($this->cachePath, $historyFile), $data);
 
             // log a history state
-            $history_states = $this->update_history($history_states, array(
-                    'file' => $history_file,
-                    'date' => date('r', $this->current_time),
-                    'time' => $this->current_time,
+            $historyStates = $this->updateHistory(
+                $historyStates, array(
+                    'file' => $historyFile,
+                    'date' => date('r', $this->currentTime),
+                    'time' => $this->currentTime,
                     'size' => strlen($data),
-                ));
+                )
+            );
 
             // delete old states
-            $history_preserved = $this->curate_history($history_states);
+            $historyPreserved = $this->curateHistory($historyStates);
 
             // update the catalog
-            $catalog_updates = array(
-                    'expire_freq' => $this->expire,
-                    'expire_offset' => $this->offset,
-                    'expire_date' => $this->expire_time($this->expire, $this->offset),
-                    'expire_time' => strtotime($this->expire_time($this->expire, $this->offset)),
-                    'last_date' => date('r', $this->current_time),
-                    'last_time' => $this->current_time,
-                    'history' => $history_preserved
-              );
+            $catalogUpdates = array(
+                'expire_freq' => $this->expire,
+                'expire_offset' => $this->offset,
+                'expire_date' => $this->expireTime($this->expire, $this->offset),
+                'expire_time' => strtotime($this->expireTime($this->expire, $this->offset)),
+                'last_date' => date('r', $this->currentTime),
+                'last_time' => $this->currentTime,
+                'history' => $historyPreserved,
+            );
 
             // make cache congruent, while still using existing history states
-            if (!$this->is_congruent_cache($catalog)) {
-                $obj_vars = get_object_vars($this);
+            if (!$this->isCongruentCache($catalog)) {
+                $objectVars = get_object_vars($this);
                 foreach ($this->congruentParams as $var) {
-                    $catalog_updates[$var] = $obj_vars[$var];
+                    $catalogUpdates[$var] = $objectVars[$var];
                 }
             }
 
-            $this->update_catalog($catalog_updates);
+            $this->updateCatalog($catalogUpdates);
         }
 
         return $data;
@@ -179,135 +179,148 @@ class Cache
     /* !HIGH-LEVEL FUNCTIONS */
 
     // initialize the cache directory and catalog
-    public function init_cache()
+    public function initCache()
     {
-        $this->create_dir($this->cache_path);
-        if (!$this->is_valid_cache()) {
-            $this->create_file($this->catalog_path, $this->init_catalog());
+        $this->createDir($this->cachePath);
+        if (!$this->isValidCache()) {
+            $this->createFile($this->catalogPath, $this->initCatalog());
         }
 
         return true;
     }
 
     // create a catalog
-    public function init_catalog()
+    public function initCatalog()
     {
         $catalog = array();
+
         $catalog = array_merge(
-          get_object_vars($this),
-          array(
-            'expire_date' => $this->expire_time($this->expire, $this->offset),
-            'expire_time' => strtotime($this->expire_time($this->expire, $this->offset)),
-            'last_date' => date('r', $this->current_time),
-            'last_time' => $this->current_time,
-            'created_date' => date('r', $this->current_time),
-            'created_time' => $this->current_time,
-          )
+            get_object_vars($this),
+            array(
+                'expire_date' => $this->expireTime($this->expire, $this->offset),
+                'expire_time' => strtotime($this->expireTime($this->expire, $this->offset)),
+                'last_date' => date('r', $this->currentTime),
+                'last_time' => $this->currentTime,
+                'created_date' => date('r', $this->currentTime),
+                'created_time' => $this->currentTime,
+            )
         );
+
+        // Remove username and password
+        unset($catalog['username']);
+        unset($catalog['password']);
+
         $catalog['history'] = array();
 
         return json_encode($catalog);
     }
 
     // update the catalog
-    public function update_catalog($data = array())
+    public function updateCatalog($data = array())
     {
-        $catalog = $this->get_catalog();
-        foreach ($data as $key => $data_point) {
-            if ($data_point) {
+        $catalog = $this->getCatalog();
+
+        foreach ($data as $key => $dataPoint) {
+            if ($dataPoint) {
                 $catalog[$key] = $data[$key];
             }
         }
+
         unset($catalog['history']);
         $catalog['history'] = $data['history'];
-        $this->write_file($this->catalog_path, json_encode($catalog));
+        $this->writeFile($this->catalogPath, json_encode($catalog));
 
         return true;
     }
 
     // update a history list
-    public function update_history($history_states = array(), $data = array())
+    public function updateHistory($historyStates = array(), $data = array())
     {
-        $history_item = array(
+        $historyItem = array(
             'file' => $data['file'],
             'date' => $data['date'],
             'time' => $data['time'],
             'size' => $data['size'],
         );
-        array_unshift($history_states, $history_item);
+        array_unshift($historyStates, $historyItem);
 
-        return $history_states;
+        return $historyStates;
     }
 
     // read + parse the catalog into an array
-    public function get_catalog()
+    public function getCatalog()
     {
-        $catalog = $this->read_file($this->catalog_path);
+        $catalog = file_get_contents($this->catalogPath);
         $catalog = json_decode($catalog, true);
 
         return $catalog;
     }
 
     // read a given history state, $index = 0 defaults to latest
-    public function read_history($history_states, $index = 0)
+    public function readHistory($historyStates, $index = 0)
     {
-        if (isset($history_states[$index]['file'])) {
-            $file_path = $this->path($this->cache_path, $history_states[$index]['file']);
+        if (isset($historyStates[$index]['file'])) {
+            $filePath = $this->path($this->cachePath, $historyStates[$index]['file']);
 
-            return $this->read_file($file_path);
+            return file_get_contents($filePath);
         }
     }
 
-    // preserve + discard history items
-    public function curate_history($history_states)
+    // delete all files in this cache directory, except the allowed number
+    // of history states
+    public function curateHistory($historyStates)
     {
-        $history_files = $this->list_files($this->cache_path, '*');
-        $history_preserved = $history_states;
-        if ($this->history_limit) {
-            $history_preserved = array_slice($history_states, 0, $this->history_limit);
-        }
-        $history_files_preserved = $this->get_key_values($history_preserved, 'file');
-        $history_discard = array_diff($history_files, $history_files_preserved);
-        foreach ($history_discard as $history_state_discard) {
-            unlink($this->path($this->cache_path, $history_state_discard));
-        }
+        if ($this->limit) {
+            $historyStates = array_slice($historyStates, 0, $this->limit);
+            $filesInCache = $this->listFiles($this->cachePath, '*');
+            $filesToPreserve = $this->getKeyValues($historyStates, 'file');
+            $filesToDiscard = array_diff($filesInCache, $filesToPreserve);
 
-        return $history_preserved;
-    }
-
-    // check if is a valid cache dir
-    public function is_valid_cache()
-    {
-        $is_valid = false;
-        if (file_exists($this->catalog_path)) {
-            $catalog = $this->get_catalog();
-            if ($catalog['key'] != '') {
-                $is_valid = true;
+            foreach ($filesToDiscard as $fileName) {
+                unlink($this->path($this->cachePath, $fileName));
             }
         }
 
-        return $is_valid;
+        return $historyStates;
     }
 
-    // check if cache configuration is congruent with this object
-    public function is_congruent_cache($catalog)
+    // check if is a valid cache dir
+    public function isValidCache()
     {
-        $is_congruent = true;
+        $isValid = false;
+
+        if (file_exists($this->catalogPath)) {
+            $catalog = $this->getCatalog();
+
+            if ($catalog['key'] != '') {
+                $isValid = true;
+            }
+        }
+
+        return $isValid;
+    }
+
+    // Check if cache configuration is congruent with this object
+    public function isCongruentCache($catalog)
+    {
+        $isCongruent = true;
+
         foreach ($this->congruentParams as $c) {
             if (!isset($catalog[$c]) || ($catalog[$c] !== $this->$c)) {
                 return false;
             }
         }
 
-        return $is_congruent;
+        return $isCongruent;
 
     }
 
     // generate expiration time
-    public function expire_time($expire, $offset = 0)
+    public function expireTime($expire, $offset = 0)
     {
         $time = null;
         $format = 'r';
+
         if ($expire == 'second') {
             $time = date($format, strtotime('+1 second', strtotime(date('Y-m-d H:i:s'))));
         } elseif ($expire == '30-second') {
@@ -330,6 +343,7 @@ class Cache
             // default is "nightly"
             $time = date($format, strtotime('+1 day', strtotime(date('Y-m-d'))));
         }
+
         if ($offset) {
             // add seconds offset
             $time = date($format, (strtotime($time) + $offset));
@@ -338,14 +352,49 @@ class Cache
         return $time;
     }
 
+
     /* !LOW-LEVEL FUNCTIONS */
 
-    // write a full path from a list of parts
+    /**
+     * Fetch data with cURL
+     */
+    public function fetchData($url)
+    {
+        $ch = curl_init();
+
+        if ($this->username) {
+            curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+            curl_setopt($ch, CURLOPT_USERPWD, $this->username . ':' . $this->password);
+        }
+
+        // Set the request URL
+        curl_setopt($ch, CURLOPT_URL, $url);
+
+        // Follow a redirect
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+
+        // Return the contents
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+        // Limit the entire transfer
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+        // Stop if error occurred
+        curl_setopt($ch, CURLOPT_FAILONERROR, 1);
+
+        $data = curl_exec($ch);
+        curl_close($ch);
+
+        return $data;
+    }
+
+    /**
+     * Get a full path from a list of parts
+     */
     public static function path()
     {
-        $path = '';
-
         $s = DIRECTORY_SEPARATOR;
+        $path = '';
 
         foreach (func_get_args() as $key => $p) {
             if ($key == 0) {
@@ -358,13 +407,16 @@ class Cache
         return rtrim($path, '/');
     }
 
-    // list the files in a directory
-    public function list_files($dir, $pattern)
+    /**
+     * List the files in a directory
+     */
+    public function listFiles($dir, $pattern)
     {
         $files = array();
-        $glob_path = rtrim($dir, '/').'/'.$pattern;
-        $files_glob = glob($glob_path);
-        foreach ($files_glob as $file) {
+        $globPath = rtrim($dir, '/') . '/' . $pattern;
+        $filesGlob = glob($globPath);
+
+        foreach ($filesGlob as $file) {
             if (is_file($file)) {
                 $files[] = basename($file);
             }
@@ -373,14 +425,10 @@ class Cache
         return $files;
     }
 
-    // read a file
-    public function read_file($filepath)
-    {
-        return file_get_contents($filepath);
-    }
-
-    // create a directory
-    public function create_dir($path, $perms = 0775)
+    /**
+     * Create a directory
+     */
+    public function createDir($path, $perms = 0775)
     {
         if (!file_exists($path)) {
             if (mkdir($path, $perms, true)) {
@@ -395,12 +443,14 @@ class Cache
         }
     }
 
-    // create a new file with said contents
-    public function create_file($filepath, $contents = '', $perms = 0775)
+    /**
+     * Create a new file with said contents
+     */
+    public function createFile($filePath, $contents = '', $perms = 0775)
     {
-        if (!file_exists($filepath)) {
-            if (file_put_contents($filepath, $contents) !== false) {
-                chmod($filepath, $perms);
+        if (!file_exists($filePath)) {
+            if (file_put_contents($filePath, $contents) !== false) {
+                chmod($filePath, $perms);
 
                 return true;
             } else {
@@ -411,18 +461,21 @@ class Cache
         }
     }
 
-    // create a new file or overwrite an existing file with said contents
-    public function write_file($filepath, $contents = '', $perms = 0775)
+    /**
+     * Create a new file or overwrite an existing file with said contents
+     */
+    public function writeFile($filePath, $contents = '', $perms = 0775)
     {
-        if (!file_exists($filepath)) {
-            if (self::create_file($filepath, $contents, $perms)) {
+        if (!file_exists($filePath)) {
+            if (self::createFile($filePath, $contents, $perms)) {
                 return true;
             }
         } else {
-            if (!is_writable($filepath)) {
-                chmod($filepath, $perms);
+            if (!is_writable($filePath)) {
+                chmod($filePath, $perms);
             }
-            if (file_put_contents($filepath, $contents) !== false) {
+
+            if (file_put_contents($filePath, $contents) !== false) {
                 return true;
             }
         }
@@ -430,73 +483,72 @@ class Cache
         return false;
     }
 
-    // return all values of multidimensional array from a given key
-    public function get_key_values($array, $key)
+    /**
+     * Return all values of multidimensional array from a given key
+     */
+    public function getKeyValues($array, $key)
     {
-        $new_array = array();
+        $values = array();
+
         foreach ($array as $item) {
             if ($item[$key]) {
-                $new_array[] = $item[$key];
+                $values[] = $item[$key];
             }
         }
 
-        return $new_array;
+        return $values;
     }
 
     /**
-    * Generate a filename available within a directory
-    */
+     * Generate a filename available within a directory
+     */
     public static function availableFilename($directory, $prefix = '', $extension = '')
     {
-    if ($prefix) {
-      $prefix = $prefix . '_';
-    }
-    if ($extension) {
-      $extension = '.' . trim($extension, '.');
-    }
-    $name = $prefix . self::randomString();
-    $path = self::path($directory, $name);
-    while (file_exists($path)) {
-      $name = $prefix . self::randomString();
-      $path = self::path($directory, $name);
-    }
-    return $name;
+        if ($prefix) {
+            $prefix = $prefix . '_';
+        }
+
+        if ($extension) {
+            $extension = '.' . trim($extension, '.');
+        }
+
+        $name = $prefix . self::randomString();
+        $path = self::path($directory, $name);
+
+        while (file_exists($path)) {
+            $name = $prefix . self::randomString();
+            $path = self::path($directory, $name);
+        }
+
+        return $name;
     }
 
     /**
-    * Generate a random string
-    */
-    public static function randomString($length = 15, $numeric = false)
+     * Generate a random string
+     */
+    public static function randomString($length = 20, $numeric = false)
     {
         $str = '';
+
         if ($numeric) {
-          $sessionaracters = array_merge(range('0', '9'));
+            $characters = array_merge(range('0', '9'));
         } else {
-          $sessionaracters = array_merge(range('A', 'Z'), range('a', 'z'), range('0', '9'));
+            $characters = array_merge(range('A', 'Z'), range('a', 'z'), range('0', '9'));
         }
-        $max = count($sessionaracters) - 1;
+
+        $max = count($characters) - 1;
+
         for ($i = 0; $i < $length; $i++) {
-          $rand = mt_rand(0, $max);
-          $str .= $sessionaracters[$rand];
+            $rand = mt_rand(0, $max);
+            $str .= $characters[$rand];
         }
+
         return $str;
     }
 
-    // fetch data with cURL
-    public function fetch_data($url)
-    {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-        $data = curl_exec($ch);
-        curl_close($ch);
-
-        return $data;
-    }
-
-    // delete an entire directory
+    /**
+     * Delete an entire directory
+     */
     public function deleteDir($dirPath)
     {
         if (file_exists($dirPath)) {
@@ -504,24 +556,7 @@ class Cache
                 $path->isFile() ? unlink($path->getPathname()) : rmdir($path->getPathname());
             }
         }
+
         rmdir($dirPath);
-    }
-
-    // get current microtime
-    public function getTime()
-    {
-        $time = microtime();
-        $time = explode(' ', $time);
-        $time = $time[1] + $time[0];
-
-        return $time;
-    }
-
-    // get microtime elapsed
-    public function getTimeElapsed($time_start, $time_end)
-    {
-        $time_elapsed = round(($time_end - $time_start), 5);
-
-        return $time_elapsed;
     }
 }
