@@ -489,10 +489,12 @@ class Cache
     public function getKeyValues($array, $key)
     {
         $values = array();
-
-        foreach ($array as $item) {
-            if ($item[$key]) {
-                $values[] = $item[$key];
+        
+        if (is_array($array)) {
+            foreach ($array as $item) {
+                if ($item[$key]) {
+                    $values[] = $item[$key];
+                }
             }
         }
 
