@@ -7,7 +7,7 @@
  * Created November 2014.
  *
  * @author Chris Ullyott
- * @version 2.2
+ * @version 2.3
  */
 
 class Cache
@@ -141,7 +141,6 @@ class Cache
             $historyStates = $this->updateHistory(
                 $historyStates, array(
                     'file' => $historyFile,
-                    'date' => date('r', $this->currentTime),
                     'time' => $this->currentTime,
                     'size' => strlen($data),
                 )
@@ -154,9 +153,7 @@ class Cache
             $catalogUpdates = array(
                 'expire_freq' => $this->expire,
                 'expire_offset' => $this->offset,
-                'expire_date' => $this->expireTime($this->expire, $this->offset),
                 'expire_time' => strtotime($this->expireTime($this->expire, $this->offset)),
-                'last_date' => date('r', $this->currentTime),
                 'last_time' => $this->currentTime,
                 'history' => $historyPreserved,
             );
@@ -197,11 +194,8 @@ class Cache
         $catalog = array_merge(
             get_object_vars($this),
             array(
-                'expire_date' => $this->expireTime($this->expire, $this->offset),
                 'expire_time' => strtotime($this->expireTime($this->expire, $this->offset)),
-                'last_date' => date('r', $this->currentTime),
                 'last_time' => $this->currentTime,
-                'created_date' => date('r', $this->currentTime),
                 'created_time' => $this->currentTime,
             )
         );
@@ -238,7 +232,6 @@ class Cache
     {
         $historyItem = array(
             'file' => $data['file'],
-            'date' => $data['date'],
             'time' => $data['time'],
             'size' => $data['size'],
         );
@@ -489,7 +482,7 @@ class Cache
     public function getKeyValues($array, $key)
     {
         $values = array();
-        
+
         if (is_array($array)) {
             foreach ($array as $item) {
                 if ($item[$key]) {
