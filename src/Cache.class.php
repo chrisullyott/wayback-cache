@@ -7,23 +7,25 @@
  * Created November 2014.
  *
  * @author Chris Ullyott
- * @version 2.2
+ * @version 2.3
  */
 
 class Cache
 {
     /* !PROPERTIES */
 
+    // Time
+    private $currentTime;
+
     // Cache
     private $url;
     private $key = 'default';
     private $expire = 'nightly';
+    private $offset = 0;
+    private $limit = 10;
     private $mustMatch = null;
     private $mustNotMatch = null;
-    private $offset = 0;
     private $retry = false;
-    private $limit = 10;
-    private $currentTime;
 
     // Authentication
     private $username;
@@ -141,27 +143,29 @@ class Cache
             $historyStates = $this->updateHistory(
                 $historyStates, array(
                     'file' => $historyFile,
-                    'date' => date('r', $this->currentTime),
                     'time' => $this->currentTime,
                     'size' => strlen($data),
                 )
             );
 
-            // delete old states
-            $historyPreserved = $this->curateHistory($historyStates);
+            // create new array of updates
+            $catalogUpdates = array();
+
+            // delete old history states if it's cleanup time
+            if ($this->currentTime >= $catalog['cleanup_time']) {
+                $historyStates = $this->cleanupHistory($historyStates);
+                $catalogUpdates['cleanup_time'] = self::getNextCleanupTime();
+            }
 
             // update the catalog
-            $catalogUpdates = array(
-                'expire_freq' => $this->expire,
-                'expire_offset' => $this->offset,
-                'expire_date' => $this->expireTime($this->expire, $this->offset),
-                'expire_time' => strtotime($this->expireTime($this->expire, $this->offset)),
-                'last_date' => date('r', $this->currentTime),
-                'last_time' => $this->currentTime,
-                'history' => $historyPreserved,
-            );
+            $catalogUpdates['expire_freq'] = $this->expire;
+            $catalogUpdates['expire_offset'] = $this->offset;
+            $catalogUpdates['expire_time'] = strtotime($this->expireTime($this->expire, $this->offset));
+            $catalogUpdates['last_time'] = $this->currentTime;
+            $catalogUpdates['history'] = $historyStates;
 
-            // make cache congruent, while still using existing history states
+            // make cache congruent in case it isn't,
+            // while still using existing history states
             if (!$this->isCongruentCache($catalog)) {
                 $objectVars = get_object_vars($this);
                 foreach ($this->congruentParams as $var) {
@@ -197,12 +201,10 @@ class Cache
         $catalog = array_merge(
             get_object_vars($this),
             array(
-                'expire_date' => $this->expireTime($this->expire, $this->offset),
                 'expire_time' => strtotime($this->expireTime($this->expire, $this->offset)),
-                'last_date' => date('r', $this->currentTime),
                 'last_time' => $this->currentTime,
-                'created_date' => date('r', $this->currentTime),
                 'created_time' => $this->currentTime,
+                'cleanup_time' => self::getNextCleanupTime()
             )
         );
 
@@ -238,7 +240,6 @@ class Cache
     {
         $historyItem = array(
             'file' => $data['file'],
-            'date' => $data['date'],
             'time' => $data['time'],
             'size' => $data['size'],
         );
@@ -268,17 +269,21 @@ class Cache
 
     // delete all files in this cache directory, except the allowed number
     // of history states
-    public function curateHistory($historyStates)
+    public function cleanupHistory($historyStates)
     {
-        if ($this->limit) {
-            $historyStates = array_slice($historyStates, 0, $this->limit);
-            $filesInCache = $this->listFiles($this->cachePath, '*');
-            $filesToPreserve = $this->getKeyValues($historyStates, 'file');
-            $filesToDiscard = array_diff($filesInCache, $filesToPreserve);
+        // enforce a limit of 1000 cache files
+        if (!$this->limit || $this->limit > 1000) {
+            $this->limit = 1000;
+        }
 
-            foreach ($filesToDiscard as $fileName) {
-                unlink($this->path($this->cachePath, $fileName));
-            }
+        // get the names of all files to discard
+        $historyStates = array_slice($historyStates, 0, $this->limit);
+        $filesInCache = $this->listFiles($this->cachePath, '*');
+        $filesToPreserve = $this->getKeyValues($historyStates, 'file');
+        $filesToDiscard = array_diff($filesInCache, $filesToPreserve);
+
+        foreach ($filesToDiscard as $fileName) {
+            unlink($this->path($this->cachePath, $fileName));
         }
 
         return $historyStates;
@@ -350,6 +355,14 @@ class Cache
         }
 
         return $time;
+    }
+
+    /**
+     * Get the timestamp of the next nightly cleanup.
+     */
+    public static function getNextCleanupTime($hoursAfterMidnight = 2)
+    {
+        return strtotime(date('Y-m-d')) + (60 * 60 * (24 + $hoursAfterMidnight));
     }
 
 
@@ -489,7 +502,7 @@ class Cache
     public function getKeyValues($array, $key)
     {
         $values = array();
-        
+
         if (is_array($array)) {
             foreach ($array as $item) {
                 if ($item[$key]) {
