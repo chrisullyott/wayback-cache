@@ -38,6 +38,10 @@ Similar to `container` but accepts a full path.
 
 The identifier of this specific cache instance (i.e., `instagram_feed` or `weather_data`). This will be used for the name of a subdirectory inside the cache container directory.
 
+### url _(string)_
+
+The API's endpoint from which we will request a response.
+
 ### expiration _(string)_
 
 Value					| Cache expiration set
@@ -62,9 +66,13 @@ With `retry` set to `TRUE`, _multiple fetch attempts_ are made if the data recei
 
 If after all attempts either of these are still true, the previous history state is returned.
 
-### limit _(integer)_
+### requestLimit _(integer)_
 
-Sets the number of history states that are saved. Once the cache has stored this many states, the oldest one is deleted to make way for new data. Default is `100` history states.
+Sets the maximum number of requests that can be made with the `url` in a day. Requests are tallied against the domain of the `url` to help avoid reaching rate limits. The default is 100 requests.
+
+### historyLimit _(integer)_
+
+Sets the number of history states (cache files) that are saved. Once the cache has stored this many files, the oldest ones will soon be deleted (on the first page load after midnight). Default is 100 history states.
 
 ### mustMatch _(string)_
 

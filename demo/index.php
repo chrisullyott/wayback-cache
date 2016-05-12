@@ -8,12 +8,10 @@
 
 	$cacheInstance = new Cache(array(
         'url'    => $requestUrl,
-      	'key'    => 'ip_lookup',
+        'key'    => 'ip_lookup',
         'expire' => 'hourly'
 	));
 
 	$ipData = $cacheInstance->get();
 
 	echo $ipData;
-
-?>

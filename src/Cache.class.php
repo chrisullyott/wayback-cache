@@ -4,10 +4,9 @@
  * "Wayback" Cache
  *
  * Caches data while intelligently managing a history of previous states.
- * Created November 2014.
  *
  * @author Chris Ullyott
- * @version 2.3
+ * @version 2.4
  */
 
 class Cache
@@ -18,14 +17,15 @@ class Cache
     private $currentTime;
 
     // Cache
-    private $url;
-    private $key = 'default';
-    private $expire = 'nightly';
-    private $offset = 0;
-    private $limit = 10;
-    private $mustMatch = null;
+    private $url          = '';
+    private $key          = 'default';
+    private $expire       = 'nightly';
+    private $offset       = 0;
+    private $mustMatch    = null;
     private $mustNotMatch = null;
-    private $retry = false;
+    private $requestLimit = 100;
+    private $historyLimit = 100;
+    private $retry        = false;
 
     // Authentication
     private $username;
@@ -36,6 +36,7 @@ class Cache
     private $containerPath;
     private $cachePath;
     private $catalogPath;
+    private $requestLogPath;
 
 
     /* !CONSTRUCT OBJECT */
@@ -68,6 +69,7 @@ class Cache
 
         $this->cachePath = $this->path($this->containerPath, $this->key);
         $this->catalogPath = $this->path($this->cachePath, '.catalog');
+        $this->requestLogPath = $this->path($this->containerPath, '.requestLog');
 
         // Clear the cache
         if (isset($_GET['clearCache'])) {
@@ -188,6 +190,7 @@ class Cache
         $this->createDir($this->cachePath);
         if (!$this->isValidCache()) {
             $this->createFile($this->catalogPath, $this->initCatalog());
+            $this->createFile($this->requestLogPath);
         }
 
         return true;
@@ -272,12 +275,12 @@ class Cache
     public function cleanupHistory($historyStates)
     {
         // enforce a limit of 1000 cache files
-        if (!$this->limit || $this->limit > 1000) {
-            $this->limit = 1000;
+        if (!$this->historyLimit || $this->historyLimit > 1000) {
+            $this->historyLimit = 1000;
         }
 
         // get the names of all files to discard
-        $historyStates = array_slice($historyStates, 0, $this->limit);
+        $historyStates = array_slice($historyStates, 0, $this->historyLimit);
         $filesInCache = $this->listFiles($this->cachePath, '*');
         $filesToPreserve = $this->getKeyValues($historyStates, 'file');
         $filesToDiscard = array_diff($filesInCache, $filesToPreserve);
@@ -318,6 +321,49 @@ class Cache
 
         return $isCongruent;
 
+    }
+
+    // Increment the request count in the API log
+    // Return false when the rate limit has been reached
+    private function checkRequestLog($url)
+    {
+        $log = file_get_contents($this->requestLogPath);
+        $domain = parse_url($url, PHP_URL_HOST);
+        $today = date('Y-m-d');
+
+        // Get json
+        if ($log) {
+            $log = json_decode($log, true);
+        } else {
+            $log = array();
+        }
+
+        // Check for today's date (start fresh each day)
+        if (!isset($log[$today])) {
+            $log = array(
+                $today => array()
+            );
+        }
+
+        // Get current count for this domain
+        if (isset($log[$today][$domain])) {
+            $count = $log[$today][$domain];
+        } else {
+            $count = 0;
+        }
+
+        // Throw exception if limit has been reached, else increment the count
+        if (is_int($this->requestLimit) && ($count >= $this->requestLimit)) {
+            $exceptionMessage  = 'The API request limit of ';
+            $exceptionMessage .= $this->requestLimit . ' has been reached.';
+
+            throw new Exception('API request limit has been reas');
+        } else {
+            $count = $count + 1;
+            $log[$today][$domain] = $count;
+
+            return file_put_contents($this->requestLogPath, json_encode($log));
+        }
     }
 
     // generate expiration time
@@ -373,6 +419,13 @@ class Cache
      */
     public function fetchData($url)
     {
+        // Before fetching, make sure we're not running into the request limit.
+        try {
+            $this->checkRequestLog($url);
+        } catch (Exception $e) {
+            return null;
+        }
+
         $ch = curl_init();
 
         if ($this->username) {
