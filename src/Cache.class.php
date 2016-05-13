@@ -60,6 +60,8 @@ class Cache
             'expire',
             'mustMatch',
             'mustNotMatch',
+            'requestLimit',
+            'historyLimit'
         );
 
         // Set up paths
@@ -357,7 +359,7 @@ class Cache
             $exceptionMessage  = 'The API request limit of ';
             $exceptionMessage .= $this->requestLimit . ' has been reached.';
 
-            throw new Exception('API request limit has been reas');
+            throw new Exception('API request limit has been reached.');
         } else {
             $count = $count + 1;
             $log[$today][$domain] = $count;
@@ -425,7 +427,7 @@ class Cache
         } catch (Exception $e) {
             return null;
         }
-
+        
         $ch = curl_init();
 
         if ($this->username) {
