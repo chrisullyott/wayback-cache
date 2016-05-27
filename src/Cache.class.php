@@ -6,7 +6,7 @@
  * Caches data while intelligently managing a history of previous states.
  *
  * @author Chris Ullyott
- * @version 2.4
+ * @version 2.5
  */
 
 class Cache
@@ -26,6 +26,10 @@ class Cache
     private $requestLimit = 100;
     private $historyLimit = 100;
     private $retry        = false;
+
+    // Content
+    private $curlInfo;
+    private $headerInfo;
 
     // Authentication
     private $username;
@@ -123,7 +127,6 @@ class Cache
                 $data = $this->fetchData($this->url);
             }
 
-
             // if new data is NULL, return last and skip writing history
             if (!$data) {
                 return $lastData;
@@ -146,9 +149,10 @@ class Cache
             // log a history state
             $historyStates = $this->updateHistory(
                 $historyStates, array(
-                    'file' => $historyFile,
-                    'time' => $this->currentTime,
-                    'size' => strlen($data),
+                    'file'    => $historyFile,
+                    'time'    => $this->currentTime,
+                    'info'    => $this->curlInfo,
+                    'headers' => $this->headerInfo,
                 )
             );
 
@@ -244,9 +248,10 @@ class Cache
     public function updateHistory($historyStates = array(), $data = array())
     {
         $historyItem = array(
-            'file' => $data['file'],
-            'time' => $data['time'],
-            'size' => $data['size'],
+            'file'    => $data['file'],
+            'time'    => $data['time'],
+            'info'    => $data['info'],
+            'headers' => $data['headers'],
         );
         array_unshift($historyStates, $historyItem);
 
@@ -427,16 +432,21 @@ class Cache
         } catch (Exception $e) {
             return null;
         }
-        
+
         $ch = curl_init();
 
+        // Set the request URL
+        curl_setopt($ch, CURLOPT_URL, $url);
+
+        // Authenticate
         if ($this->username) {
             curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
             curl_setopt($ch, CURLOPT_USERPWD, $this->username . ':' . $this->password);
         }
 
-        // Set the request URL
-        curl_setopt($ch, CURLOPT_URL, $url);
+        // For logging headers
+        curl_setopt($ch, CURLOPT_HEADER, 1);
+        curl_setopt($ch, CURLOPT_VERBOSE, 1);
 
         // Follow a redirect
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
@@ -447,10 +457,36 @@ class Cache
         // Limit the entire transfer
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
-        // Stop if error occurred
-        curl_setopt($ch, CURLOPT_FAILONERROR, 1);
+        // Execute
+        $response = curl_exec($ch);
 
-        $data = curl_exec($ch);
+        // Get CURL info
+        $this->curlInfo = curl_getinfo($ch);
+
+        // Parse headers
+        $headers = array();
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $headerLines = explode("\n", trim(substr($response, 0, $headerSize)));
+
+        foreach ($headerLines as $headerLine) {
+            $headerLineArray = explode(':', $headerLine, 2);
+
+            if (stripos($headerLineArray[0], 'HTTP/') !== false) {
+                $headerLineArray[1] = $headerLineArray[0];
+                $headerLineArray[0] = 'Response';
+            }
+
+            $headerLineKey = trim($headerLineArray[0]);
+            $headerLineValue = trim($headerLineArray[1]);
+            $headers[$headerLineKey] = $headerLineValue;
+        }
+
+        $this->headerInfo = $headers;
+
+        // Get data
+        $data = trim(substr($response, $headerSize));
+
+        // Close connection
         curl_close($ch);
 
         return $data;
