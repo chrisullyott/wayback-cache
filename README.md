@@ -34,10 +34,6 @@ Sets the path to the parent cache directory, where this cache instance will be s
 $_SERVER['DOCUMENT_ROOT'] . '/_cache'
 ```
 
-### container_path _(string)_
-
-Similar to `container` but accepts a full path.
-
 ### key _(string)_
 
 The identifier of this specific cache instance (i.e., `instagram_feed` or `weather_data`). This will be used for the name of a subdirectory inside the cache container directory.
@@ -60,6 +56,10 @@ monthly                 | Every first of the month at midnight
 ### offset _(integer)_
 
 Pushes back the expiration time by a number of seconds. For example, to make the cache expire at 2:00 am, use `nightly` and the value of `2 * 60 * 60`. The default is `0`.
+
+### cacheEmpty
+
+Whether to consider an empty response as valid. If true, an empty response is cached and will not be updated until the expiration time. If false, an empty response is not cached and will be requested again on the next run. Default is _false_.
 
 ### retry _(boolean)_
 

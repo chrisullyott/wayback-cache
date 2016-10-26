@@ -25,6 +25,7 @@ class Cache
     private $mustNotMatch = null;
     private $requestLimit = 100;
     private $historyLimit = 100;
+    private $cacheEmpty   = false;
     private $retry        = false;
 
     // Content
@@ -89,22 +90,34 @@ class Cache
     // Read the latest entry, or make attempts to retrieve the data.
     public function get()
     {
-        $data = '';
-        $lastData = '';
+        $data          = '';
+        $lastData      = '';
+        $fetchNew      = false;
 
-        $catalog = $this->getCatalog();
+        $catalog       = $this->getCatalog();
         $historyStates = $catalog['history'];
+        $isExpired     = $catalog['expire_time'] <= $this->currentTime;
 
-        // data is not expired
         if ($historyStates) {
             $lastData = $this->readHistory($historyStates);
-            if (($this->currentTime < $catalog['expire_time'])) {
+        }
+
+        if ($this->cacheEmpty) {
+            if (!$isExpired && $historyStates) {
                 $data = $lastData;
+            } else {
+                $fetchNew = true;
+            }
+        } else {
+            if (!$isExpired && $lastData) {
+                $data = $lastData;
+            } else {
+                $fetchNew = true;
             }
         }
 
         // data has expired or cache config is different
-        if (!$data) {
+        if ($fetchNew) {
 
             // make a new request
             if ($this->retry) {
@@ -124,8 +137,8 @@ class Cache
                 $data = $this->fetchData($this->url);
             }
 
-            // if new data is NULL, return last and skip writing history
-            if (!$data) {
+            // return last and skip writing history
+            if (!$data && !$this->cacheEmpty) {
                 return $lastData;
             }
 
