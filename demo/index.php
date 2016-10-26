@@ -10,7 +10,6 @@
 
     $cacheInstance = new Cache(array(
         'url'    => $requestUrl,
-        'key'    => 'ip_lookup',
         'expire' => 'hourly'
     ));
 
