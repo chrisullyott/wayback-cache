@@ -17,8 +17,8 @@ class Cache
     private $currentTime;
 
     // Cache
-    private $url          = '';
-    private $key          = 'default';
+    private $url          = null;
+    private $key          = null;
     private $expire       = 'nightly';
     private $offset       = 0;
     private $mustMatch    = null;
@@ -56,6 +56,11 @@ class Cache
             foreach($args as $key => $val) {
                 $this->{$key} = $val;
             }
+        }
+
+        // Set default key
+        if (!$this->key) {
+            $this->key = md5($this->url);
         }
 
         // Congruency points
