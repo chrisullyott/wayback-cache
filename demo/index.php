@@ -1,17 +1,20 @@
 <?php require_once('../src/Cache.class.php'); ?>
 <?php
 
-	ini_set('display_errors', 1);
+    // Error reporting (exclude notices)
+    error_reporting(E_ERROR | E_PARSE);
+
     header('Content-Type: application/json');
 
     $requestUrl = 'http://ip-api.com/json/wired.com';
 
-	$cacheInstance = new Cache(array(
+    $cacheInstance = new Cache(array(
         'url'    => $requestUrl,
         'key'    => 'ip_lookup',
         'expire' => 'hourly'
-	));
+    ));
 
-	$ipData = $cacheInstance->get();
+    $ipData = $cacheInstance->get();
 
-	echo $ipData;
+    echo "data:\n";
+    echo $ipData . "\n";

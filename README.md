@@ -9,15 +9,15 @@ A PHP class for intelligently requesting and cataloging a history of data. Helpf
 
     $requestUrl = 'http://ip-api.com/json/wired.com';
 
-	$cacheInstance = new Cache(array(
+    $cacheInstance = new Cache(array(
         'url'    => $requestUrl,
-      	'key'    => 'ip_lookup',
+        'key'    => 'ip_lookup',
         'expire' => 'hourly'
-	));
+    ));
 
-	$ipData = $cacheInstance->get();
+    $ipData = $cacheInstance->get();
 
-	echo $ipData;
+    echo $ipData;
 
 ?>
 ```
@@ -28,7 +28,11 @@ See also: http://chrisullyott.com/blog/2014-11-24-wayback-cache/
 
 ### container _(string)_
 
-Sets the path to the parent cache directory, where this cache instance will be stored. If the path does not exist, it is created. This path is relative to the document root. The default is `_cache`.
+Sets the path to the parent cache directory, where this cache instance will be stored. If the path does not exist, it is created. The default is `_cache`. For websites, it's recommended to use:
+
+```
+$_SERVER['DOCUMENT_ROOT'] . '/_cache'
+```
 
 ### container_path _(string)_
 
@@ -44,14 +48,14 @@ The API's endpoint from which we will request a response.
 
 ### expiration _(string)_
 
-Value					| Cache expiration set
-:----------				| :-----------
-second					| Every second
-minute					| Every minute
-hourly					| Every hour
-nightly (default)		| Every night at midnight
-weekly					| Every Sunday night at midnight
-monthly					| Every first of the month at midnight
+Value                   | Cache expiration set
+:----------             | :-----------
+second                  | Every second
+minute                  | Every minute
+hourly                  | Every hour
+nightly (default)       | Every night at midnight
+weekly                  | Every Sunday night at midnight
+monthly                 | Every first of the month at midnight
 
 ### offset _(integer)_
 

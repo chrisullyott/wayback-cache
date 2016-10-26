@@ -36,7 +36,7 @@ class Cache
     private $password;
 
     // Paths
-    private $container = '/_cache';
+    private $container = '_cache';
     private $containerPath;
     private $cachePath;
     private $catalogPath;
@@ -69,10 +69,7 @@ class Cache
         );
 
         // Set up paths
-        if (!$this->containerPath) {
-            $this->containerPath = $this->path($_SERVER['DOCUMENT_ROOT'], $this->container);
-        }
-
+        $this->containerPath = $this->path($this->container);
         $this->cachePath = $this->path($this->containerPath, $this->key);
         $this->catalogPath = $this->path($this->cachePath, '.catalog');
         $this->requestLogPath = $this->path($this->containerPath, '.requestLog');
