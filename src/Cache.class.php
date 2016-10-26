@@ -6,7 +6,7 @@
  * Caches data while intelligently managing a history of previous states.
  *
  * @author Chris Ullyott
- * @version 2.5
+ * @version 2.6
  */
 
 class Cache
