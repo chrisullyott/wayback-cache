@@ -1,34 +1,67 @@
 Wayback Cache
-===============
+=============
 
-A PHP class for intelligently requesting and cataloging a history of data. Helpful when needing to cache requests from third-party API's and fall back to previous data if a new request is unsuccessful.
+A simple filesystem cache [made with care](http://chrisullyott.com/blog/2014-11-24-wayback-cache/). Cache responses from third-party APIs responsibly and easily.
+
+Features
+--------
+
+- **Fallbacks.** For most websites, old content is better than no content. If any API request fails, the cache returns the most recent content until the next request can be made.
+- **Easy rate-limiting.** When the host reports only a few requests are remaining, the cache returns the most recent data until the host's rate limit has reset.
+- **History states.** A number of previous requests are stored in the cache for future reference.
+- **Low footprint.** Old or irrelevant cache files are removed automatically on a nightly basis.
+
+Sample
+------
 
 ```
-<?php require_once('Cache.class.php'); ?>
 <?php
 
-    $requestUrl = 'http://ip-api.com/json/wired.com';
+    error_reporting(E_ERROR | E_PARSE);
 
-    $cacheInstance = new Cache(array(
-        'url'    => $requestUrl,
-        'key'    => 'ip_lookup',
-        'expire' => 'hourly'
+    $cache = new Cache(array(
+        'key'    => 'test-instance',
+        'expire' => 'minute'
     ));
 
-    $ipData = $cacheInstance->get();
+    $url = 'http://ip-api.com/json/wired.com';
+    $data = $cache->getByUrl($url);
 
-    echo $ipData;
+    echo $data . "\n";
 
-?>
 ```
 
-See also: http://chrisullyott.com/blog/2014-11-24-wayback-cache/
+Methods
+-------
 
-## Initialization
+### get()
+
+Reads the latest data from the cache, or returns `FALSE` if expired.
+
+### set()
+
+As you would expect: updates the cache with new content and increments the expiration.
+
+### getByUrl()
+
+A combination of `get()` and `set()` where the latest data is either returned from the cache, or requested and re-cached from the URL when expired.
+
+To avoid running into problems with the host's rate limit, pass in the names of the rate limit headers and this method will stop requesting before you're blocked.
+
+For example, from the [Vimeo API](https://developer.vimeo.com/guidelines/rate-limiting):
+
+```
+$data = $cache->getByUrl($url, 'X-RateLimit-Remaining', 'X-RateLimit-Reset');
+```
+
+Options
+-------
+
+Cache options are set as an associative array passed to the object being instantiated (see above).
 
 ### container _(string)_
 
-Sets the path to the parent cache directory, where this cache instance will be stored. If the path does not exist, it is created. The default is `_cache`. For websites, it's recommended to use:
+Sets the path to the parent cache directory, where this cache instance will be stored. If the path does not exist, it is created. The default is `cache`. For websites, you could use:
 
 ```
 $_SERVER['DOCUMENT_ROOT'] . '/_cache'
@@ -38,62 +71,33 @@ $_SERVER['DOCUMENT_ROOT'] . '/_cache'
 
 The identifier of this specific cache instance (i.e., `instagram_feed` or `weather_data`). This will be used for the name of a subdirectory inside the cache container directory.
 
-### url _(string)_
+### expire _(integer|string)_
 
-The API's endpoint from which we will request a response.
+The time the cache expires after having been set. Accepts either an integer (number of seconds) or a friendly keyword from the list below:
 
-### expiration _(string)_
-
-Value                   | Cache expiration set
-:----------             | :-----------
-second                  | Every second
-minute                  | Every minute
-hourly                  | Every hour
-nightly (default)       | Every night at midnight
-weekly                  | Every Sunday night at midnight
-monthly                 | Every first of the month at midnight
+Value              | Cache expiration set
+:----------        | :-----------
+second             | Every second
+minute             | Every minute
+hourly             | Every hour
+workday            | Every eight hours
+halfday            | Every twelve hours
+nightly (default)  | Every night at midnight
+weekly             | Every Sunday night at midnight
+monthly            | Every first of the month at midnight
 
 ### offset _(integer)_
 
 Pushes back the expiration time by a number of seconds. For example, to make the cache expire at 2:00 am, use `nightly` and the value of `2 * 60 * 60`. The default is `0`.
 
-### cacheEmpty
-
-Whether to consider an empty response as valid. If true, an empty response is cached and will not be updated until the expiration time. If false, an empty response is not cached and will be requested again on the next run. Default is _false_.
-
-### retry _(boolean)_
-
-With `retry` set to `TRUE`, _multiple fetch attempts_ are made if the data received from `$url` is either:
-
-1. NULL
-2. Equal to the data from the previous history state
-
-If after all attempts either of these are still true, the previous history state is returned.
-
-### requestLimit _(integer)_
-
-Sets the maximum number of requests that can be made to the `url`'s domain in a day. Helps avoid reaching rate limits. The default is 100 requests.
-
 ### historyLimit _(integer)_
 
-Sets the maximum number of history states (cache files) that are allowed to remain in the filesystem. Once the cache has stored this many files, the oldest ones will soon be deleted (on the first page load after midnight). Default is `100` history states.
+Sets the maximum number of history states (cache files) that are allowed to remain in the filesystem. Once the cache has stored this many files, the oldest ones will soon be deleted (on the first request after midnight). The default is 25 history states.
 
 ### mustMatch _(string)_
 
-A regular expression pattern which incoming data must match in order for the cache to be updated. Example: `/<img/`
+A regular expression which incoming data must match in order for the cache to be updated. Example: `/user_images/`
 
 ### mustNotMatch _(string)_
 
-A regular expression pattern which incoming data _must not match_ in order for the cache to be updated. Example: `/error/`
-
-## Methods
-
-### get()
-
-Reads the latest data from the cache. If the cache is expired, data is fetched and a new history state is created with the response.
-
-## Query strings
-
-### ?clearCache
-
-The cache is first erased and then set up again with one new history state.
+A regular expression which incoming data _must not match_ in order for the cache to be updated. Example: `/error/`

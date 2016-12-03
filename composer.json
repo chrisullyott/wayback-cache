@@ -1,0 +1,25 @@
+{
+    "name": "chrisullyott/wayback-cache",
+    "type": "library",
+    "description": "Caches and catalogs a history of API requests.",
+    "authors": [
+        {
+            "name": "Chris Ullyott",
+            "email": "contact@chrisullyott.com",
+            "homepage": "http://chrisullyott.com",
+            "role": "Developer"
+        }
+    ],
+    "keywords": [
+        "cache",
+        "caching"
+    ],
+    "require": {
+        "php": "^5.6"
+    },
+    "autoload": {
+        "classmap": [
+            "src/"
+        ]
+    }
+}
