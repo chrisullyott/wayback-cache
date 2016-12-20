@@ -76,7 +76,7 @@ Sets the maximum number of requests that can be made to the `url`'s domain in a 
 
 ### historyLimit _(integer)_
 
-Sets the number of history states (cache files) that are saved. Once the cache has stored this many files, the oldest ones will soon be deleted (on the first page load after midnight). Default is 100 history states.
+Sets the maximum number of history states (cache files) that are allowed to remain in the filesystem. Once the cache has stored this many files, the oldest ones will soon be deleted (on the first page load after midnight). Default is `100` history states.
 
 ### mustMatch _(string)_
 
