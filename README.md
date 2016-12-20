@@ -72,7 +72,7 @@ If after all attempts either of these are still true, the previous history state
 
 ### requestLimit _(integer)_
 
-Sets the maximum number of requests that can be made with the `url` in a day. Requests are tallied against the domain of the `url` to help avoid reaching rate limits. The default is 100 requests.
+Sets the maximum number of requests that can be made to the `url`'s domain in a day. Helps avoid reaching rate limits. The default is 100 requests.
 
 ### historyLimit _(integer)_
 
