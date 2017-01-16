@@ -66,9 +66,9 @@ $_SERVER['DOCUMENT_ROOT'] . '/_cache'
 
 The identifier of this specific cache instance (i.e., `instagram_feed` or `weather_data`). This will be used for the name of a subdirectory inside the cache container directory.
 
-### expire _(integer|string)_
+### expire _(integer or string)_
 
-The time the cache expires after having been set. Accepts either an integer (number of seconds) or a friendly keyword from the list below:
+The interval of time after which the cache will expire. Accepts either an integer (number of seconds) or a friendly keyword from the list below:
 
 Value              | Cache expiration set
 :----------        | :-----------
