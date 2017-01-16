@@ -19,10 +19,7 @@ class Time
     {
         switch ($expire) {
             case is_numeric($expire):
-                $time = strtotime("+{$expire} second", strtotime(date('Y-m-d H:i:s')));
-                break;
-            case 'second':
-                $time = strtotime('+1 second', strtotime(date('Y-m-d H:i:s')));
+                $time = time() + $expire;
                 break;
             case 'minute':
                 $time = strtotime('+1 minute', strtotime(date('Y-m-d H:i:00')));
