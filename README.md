@@ -70,7 +70,7 @@ The identifier of this specific cache instance (i.e., `instagram_feed` or `weath
 
 The interval of time after which the cache will expire. Accepts either an integer (number of seconds) or a friendly keyword from the list below:
 
-Value              | Cache expiration set
+Value              | Expiration
 :----------        | :-----------
 second             | Every second
 minute             | Every minute
