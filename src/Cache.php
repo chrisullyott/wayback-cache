@@ -5,9 +5,10 @@
  *
  * Caches data while intelligently managing a history of previous states.
  *
- * @author  Chris Ullyott
- * @link https://github.com/chrisullyott/wayback-cache
  * @version 3.0
+ * @link https://github.com/chrisullyott/wayback-cache
+ * @author Chris Ullyott
+ * @copyright Chris Ullyott
  */
 
 use Cache\Library\Data\Catalog;
