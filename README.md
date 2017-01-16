@@ -24,7 +24,7 @@ Features
 - **Fallbacks.** For most websites, old content is better than no content. If any API request fails, the cache returns the most recent content until the next request can be made.
 - **Easy rate-limiting.** When the host reports only a few requests are remaining, the cache returns the most recent content until the host's rate limit has reset.
 - **History states.** A number of previous requests are stored in the cache for future reference.
-- **Low footprint.** Old or irrelevant cache files are removed automatically on a nightly basis.
+- **Small footprint.** Old or irrelevant cache files are removed automatically on a nightly basis.
 
 Methods
 -------
