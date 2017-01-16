@@ -83,11 +83,11 @@ monthly            | Every first of the month at midnight
 
 ### offset _(integer)_
 
-Pushes back the expiration time by a number of seconds. For example, to make the cache expire at 2:00 am, use `nightly` and the value of `2 * 60 * 60`. The default is `0`.
+Pushes back the expiration time by a number of seconds. For example, to make the cache expire at 2:00 am every night, set `expire` to `nightly` and `offset` to a value of `2 * 60 * 60`.
 
 ### historyLimit _(integer)_
 
-Sets the maximum number of history states (cache files) that are allowed to remain in the filesystem. Once the cache has stored this many files, the oldest ones will soon be deleted (on the first request after midnight). The default is 25 history states.
+Sets the maximum number of history states (cache files) that are allowed to remain in the cache. Once the cache has stored this many files, the oldest ones will soon be deleted (on the first request after midnight). The default is 25 history states.
 
 ### mustMatch _(string)_
 
@@ -96,3 +96,5 @@ A regular expression which incoming content must match in order for the cache to
 ### mustNotMatch _(string)_
 
 A regular expression which incoming content _must not match_ in order for the cache to be updated. Example: `/error/`
+
+I welcome any suggestions and PRs.
