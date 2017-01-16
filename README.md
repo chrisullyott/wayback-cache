@@ -1,18 +1,15 @@
 Wayback Cache
 =============
 
-A simple filesystem cache [made with care](http://chrisullyott.com/blog/2014-11-24-wayback-cache/). Cache responses from third-party APIs responsibly and easily.
+A simple filesystem cache [made with care](http://chrisullyott.com/blog/2014-11-24-wayback-cache/). Cache responses from third-party APIs easily and responsibly.
 
 Features
 --------
 
 - **Fallbacks.** For most websites, old content is better than no content. If any API request fails, the cache returns the most recent content until the next request can be made.
-- **Easy rate-limiting.** When the host reports only a few requests are remaining, the cache returns the most recent data until the host's rate limit has reset.
+- **Easy rate-limiting.** When the host reports only a few requests are remaining, the cache returns the most recent content until the host's rate limit has reset.
 - **History states.** A number of previous requests are stored in the cache for future reference.
 - **Low footprint.** Old or irrelevant cache files are removed automatically on a nightly basis.
-
-Sample
-------
 
 ```
 <?php
@@ -36,17 +33,17 @@ Methods
 
 ### get()
 
-Reads the latest data from the cache, or returns `FALSE` if expired.
+Reads the latest content from the cache, or returns `FALSE` if expired.
 
 ### set()
 
-As you would expect: updates the cache with new content and increments the expiration.
+Updates the cache with new content and increments the expiration.
 
 ### getByUrl()
 
-A combination of `get()` and `set()` where the latest data is either returned from the cache, or requested and re-cached from the URL when expired.
+A combination of `get()` and `set()` where the latest content is either returned from the cache, or requested and re-cached from the URL when expired.
 
-To avoid running into problems with the host's rate limit, pass in the names of the rate limit headers and this method will stop requesting before you're blocked.
+To avoid running into problems with the host's rate limit, pass in the rate limit headers (count remaining and reset time) and this method will stop requesting before you're blocked.
 
 For example, from the [Vimeo API](https://developer.vimeo.com/guidelines/rate-limiting):
 
@@ -96,8 +93,8 @@ Sets the maximum number of history states (cache files) that are allowed to rema
 
 ### mustMatch _(string)_
 
-A regular expression which incoming data must match in order for the cache to be updated. Example: `/user_images/`
+A regular expression which incoming content must match in order for the cache to be updated. Example: `/user_images/`
 
 ### mustNotMatch _(string)_
 
-A regular expression which incoming data _must not match_ in order for the cache to be updated. Example: `/error/`
+A regular expression which incoming content _must not match_ in order for the cache to be updated. Example: `/error/`
