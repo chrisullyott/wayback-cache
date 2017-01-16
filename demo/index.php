@@ -5,7 +5,7 @@
 
     $cache = new Cache(array(
         'key'    => 'test-instance',
-        'expire' => 'minute'
+        'expire' => 'hourly'
     ));
 
     $url = 'http://ip-api.com/json/wired.com';
