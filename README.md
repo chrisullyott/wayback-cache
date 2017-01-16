@@ -3,18 +3,8 @@ Wayback Cache
 
 A simple filesystem cache [made with care](http://chrisullyott.com/blog/2014-11-24-wayback-cache/). Cache responses from third-party APIs easily and responsibly.
 
-Features
---------
-
-- **Fallbacks.** For most websites, old content is better than no content. If any API request fails, the cache returns the most recent content until the next request can be made.
-- **Easy rate-limiting.** When the host reports only a few requests are remaining, the cache returns the most recent content until the host's rate limit has reset.
-- **History states.** A number of previous requests are stored in the cache for future reference.
-- **Low footprint.** Old or irrelevant cache files are removed automatically on a nightly basis.
-
 ```
 <?php
-
-    error_reporting(E_ERROR | E_PARSE);
 
     $cache = new Cache(array(
         'key'    => 'test-instance',
@@ -27,6 +17,14 @@ Features
     echo $data . "\n";
 
 ```
+
+Features
+--------
+
+- **Fallbacks.** For most websites, old content is better than no content. If any API request fails, the cache returns the most recent content until the next request can be made.
+- **Easy rate-limiting.** When the host reports only a few requests are remaining, the cache returns the most recent content until the host's rate limit has reset.
+- **History states.** A number of previous requests are stored in the cache for future reference.
+- **Low footprint.** Old or irrelevant cache files are removed automatically on a nightly basis.
 
 Methods
 -------
