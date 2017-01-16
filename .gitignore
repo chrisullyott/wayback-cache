@@ -1,4 +1,3 @@
 .DS_Store
-demo/api_keys.php
-demo/_cache/*
-demo/_auth/*
+demo/cache/*
+demo/vendor/*

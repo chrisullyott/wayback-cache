@@ -1,19 +1,14 @@
-<?php require_once('../src/Cache.class.php'); ?>
+<?php require_once('vendor/autoload.php'); ?>
 <?php
 
-    // Error reporting (exclude notices)
     error_reporting(E_ERROR | E_PARSE);
 
-    header('Content-Type: application/json');
-
-    $requestUrl = 'http://ip-api.com/json/wired.com';
-
-    $cacheInstance = new Cache(array(
-        'url'    => $requestUrl,
-        'expire' => 'hourly'
+    $cache = new Cache(array(
+        'key'    => 'test-instance',
+        'expire' => 'minute'
     ));
 
-    $ipData = $cacheInstance->get();
+    $url = 'http://ip-api.com/json/wired.com';
+    $data = $cache->getByUrl($url);
 
-    echo "data:\n";
-    echo $ipData . "\n";
+    echo $data . "\n";
