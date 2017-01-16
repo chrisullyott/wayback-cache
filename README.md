@@ -21,6 +21,7 @@ A simple filesystem cache [made with care](http://chrisullyott.com/blog/2014-11-
 Features
 --------
 
+- **Flexibility.** Manage multiple caches, each with their own rules and expiration frequencies.
 - **Fallbacks.** For most websites, old content is better than no content. If any API request fails, the cache returns the most recent content until the next request can be made.
 - **Easy rate-limiting.** When the host reports only a few requests are remaining, the cache returns the most recent content until the host's rate limit has reset.
 - **History states.** A number of previous requests are stored in the cache for future reference.
