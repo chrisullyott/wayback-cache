@@ -6,6 +6,7 @@
  * Caches data while intelligently managing a history of previous states.
  *
  * @author  Chris Ullyott
+ * @link https://github.com/chrisullyott/wayback-cache
  * @version 3.0
  */
 
@@ -17,7 +18,6 @@ use Cache\Library\Utility\String;
 
 class Cache
 {
-
     /**
      * The key (essentially, the ID) of this cache.
      *
