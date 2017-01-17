@@ -18,6 +18,23 @@ A simple filesystem cache [made with care](http://chrisullyott.com/blog/2014-11-
 
 ```
 
+Installation
+------------
+
+Download, or use [Composer](https://getcomposer.org/) to install:
+
+```
+"repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/chrisullyott/wayback-cache"
+    }
+],
+"require": {
+    "chrisullyott/wayback-cache": "dev-master"
+}
+```
+
 Features
 --------
 
