@@ -5,7 +5,7 @@
  *
  * Caches data while intelligently managing a history of previous states.
  *
- * @version 3.0.1
+ * @version 3.0.2
  * @link https://github.com/chrisullyott/wayback-cache
  * @author Chris Ullyott
  * @copyright Chris Ullyott
@@ -59,7 +59,7 @@ class Cache
      *
      * @var integer
      */
-    private $historyLimit = 25;
+    private $historyLimit = 10;
 
     /**
      * The time this class began to run.
