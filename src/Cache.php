@@ -5,7 +5,7 @@
  *
  * Caches data while intelligently managing a history of previous states.
  *
- * @version 3.0
+ * @version 3.0.1
  * @link https://github.com/chrisullyott/wayback-cache
  * @author Chris Ullyott
  * @copyright Chris Ullyott
@@ -121,8 +121,7 @@ class Cache
         'expire',
         'offset',
         'mustMatch',
-        'mustNotMatch',
-        'historyLimit'
+        'mustNotMatch'
     );
 
     /**
@@ -472,6 +471,7 @@ class Cache
 
         return $this->getCatalog()->update(array(
             'cleanupTime' => Time::nextCleanup(),
+            'historyLimit' => $this->historyLimit,
             'history' => $history
         ));
     }
