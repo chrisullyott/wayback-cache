@@ -15,7 +15,6 @@ A simple filesystem cache [made with care](http://chrisullyott.com/blog/2014-11-
     $data = $cache->getByUrl($url);
 
     echo $data . "\n";
-
 ```
 
 Features
