@@ -103,7 +103,7 @@ Pushes back the expiration time by a number of seconds. For example, to make the
 
 ### historyLimit _(integer)_
 
-Sets the maximum number of history states (cache files) that are allowed to remain in the cache. Once the cache has stored this many files, the oldest ones will soon be deleted (on the first request after midnight). The default is 25 history states.
+Sets the maximum number of history states (cache files) that are allowed to remain in the cache. Once the cache has stored this many files, the oldest ones will soon be deleted (on the first request after midnight). The default is 10 history states.
 
 ### mustMatch _(string)_
 
