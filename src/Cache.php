@@ -5,7 +5,7 @@
  *
  * Caches data while intelligently managing a history of previous states.
  *
- * @version 3.0.2
+ * @version 3.0.3
  * @link https://github.com/chrisullyott/wayback-cache
  * @author Chris Ullyott
  * @copyright Chris Ullyott
@@ -381,9 +381,11 @@ class Cache
      */
     private function isRateLimited($remainingHeader = null, $resetTimeHeader = null)
     {
-        if ($remainingHeader && $resetTimeHeader) {
-            $last = $this->getCatalog()->read('history')[0];
-
+        $history = $this->getCatalog()->read('history');
+        
+        if (!empty($history[0]) && $remainingHeader && $resetTimeHeader) {
+            $last = $history[0];
+            
             if (!empty($last['headers'][$remainingHeader])) {
                 $remaining = $last['headers'][$remainingHeader];
             } else {
