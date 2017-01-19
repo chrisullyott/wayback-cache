@@ -9,7 +9,7 @@ namespace Cache\Library\Utility;
 class File
 {
     /**
-     * Join a full path from a list of parts passed as arguments.
+     * Build a full path from parts passed as arguments.
      *
      * @return string
      */
@@ -18,11 +18,13 @@ class File
         $parts = func_get_args();
         $sep = DIRECTORY_SEPARATOR;
 
-        $first = array_shift($parts);
-        $parts = array_map('trim', $parts);
-        array_unshift($parts, rtrim($first));
+        $path = rtrim(array_shift($parts), $sep);
 
-        return implode($sep, $parts);
+        foreach ($parts as $p) {
+            $path .= $sep . trim($p, $sep);
+        }
+
+        return $path;
     }
 
     /**
