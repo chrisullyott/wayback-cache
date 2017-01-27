@@ -113,4 +113,15 @@ A regular expression which incoming content must match in order for the cache to
 
 A regular expression which incoming content _must not match_ in order for the cache to be updated. Example: `/error/`
 
-I welcome any suggestions and PRs.
+### Instantiating without an options array
+
+If you only need to set the basic options necessary for caching (key and expiration) you can use both as arguments instead of passing in an array:
+
+```
+$cache = new Cache('key-name', 'hourly');
+```
+
+Contributing
+------------
+
+I welcome any suggestions and PRs!
