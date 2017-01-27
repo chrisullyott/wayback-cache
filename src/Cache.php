@@ -97,13 +97,6 @@ class Cache
     private $cachePath;
 
     /**
-     * The default catalog filename.
-     *
-     * @var string
-     */
-    private $catalogName = '.catalog';
-
-    /**
      * This cache's catalog.
      *
      * @var Catalog
@@ -198,7 +191,7 @@ class Cache
     private function getCatalog()
     {
         if (!$this->catalog) {
-            $catalogPath = File::path($this->getCachePath(), $this->catalogName);
+            $catalogPath = File::path($this->getCachePath(), '.catalog');
             $this->catalog = new Catalog($catalogPath);
         }
 
@@ -359,10 +352,10 @@ class Cache
     private function isRateLimited($remainingHeader = null, $resetTimeHeader = null)
     {
         $history = $this->getCatalog()->read('history');
-        
+
         if (!empty($history[0]) && $remainingHeader && $resetTimeHeader) {
             $last = $history[0];
-            
+
             if (!empty($last['headers'][$remainingHeader])) {
                 $remaining = $last['headers'][$remainingHeader];
             } else {
