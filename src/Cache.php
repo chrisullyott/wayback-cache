@@ -5,7 +5,7 @@
  *
  * Caches data while intelligently managing a history of previous states.
  *
- * @version 3.0.4
+ * @version 3.0.5
  * @link https://github.com/chrisullyott/wayback-cache
  * @author Chris Ullyott
  * @copyright Chris Ullyott
@@ -191,17 +191,6 @@ class Cache
     }
 
     /**
-     * Get the path to any cache.
-     *
-     * @param  string $key A cache key
-     * @return string
-     */
-    private function getCachePathByKey($key)
-    {
-        return File::path($this->container, $key);
-    }
-
-    /**
      * Get the Catalog object belonging to this cache.
      *
      * @return Catalog
@@ -214,18 +203,6 @@ class Cache
         }
 
         return $this->catalog;
-    }
-
-    /**
-     * Get the Catalog object of any cache.
-     *
-     * @param  string $key A cache key
-     * @return Catalog
-     */
-    private function getCatalogByKey($key)
-    {
-        $catalogPath = File::path($this->getCachePathByKey($key), $this->catalogName);
-        return new Catalog($catalogPath);
     }
 
     /**
@@ -515,19 +492,6 @@ class Cache
     }
 
     /**
-     * Move a cache's expiration up to the next time.
-     *
-     * @param  string $key A cache key
-     * @return boolean Whether the catalog was updated
-     */
-    public function incrementByKey($key)
-    {
-        return $this->getCatalogByKey($key)->update(array(
-            'expireTime' => Time::nextExpire($this->expire, $this->offset)
-        ));
-    }
-
-    /**
      * Invalidate this cache.
      *
      * @return boolean Whether the cache was invalidated
@@ -538,17 +502,6 @@ class Cache
     }
 
     /**
-     * Invalidate any cache.
-     *
-     * @param  string $key A cache key
-     * @return boolean Whether the cache was invalidated
-     */
-    public function invalidateByKey($key)
-    {
-        return $this->getCatalogByKey($key)->update('expireTime', 0);
-    }
-
-    /**
      * Clear the cache. If a key is not specified, the container is cleared.
      *
      * @return boolean Whether the cache was cleared
@@ -556,17 +509,6 @@ class Cache
     private function clear()
     {
         return File::deleteDir($this->getCachePath());
-    }
-
-    /**
-     * Clear a given cache. If a key is not specified, the container is cleared.
-     *
-     * @param  string $key A cache key
-     * @return boolean Whether the cache was cleared
-     */
-    public function clearByKey($key = null)
-    {
-        return File::deleteDir($this->getCachePathByKey($key), !$key);
     }
 
 }
