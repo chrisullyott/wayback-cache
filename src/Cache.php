@@ -119,26 +119,42 @@ class Cache
 
     /**
      * Constructor.
-     *
-     * @param array $options The associative array of cache options
      */
-    public function __construct($options)
+    public function __construct()
     {
-        // Set class properties.
-        if (is_array($options)) {
-            foreach($options as $k => $v) {
-                if (property_exists($this, $k)) {
-                    $this->{$k} = $v;
-                } else {
-                    throw new Exception("{$k} is not a valid property");
-                }
-            }
+        $a = func_get_args();
+
+        // Set properties.
+        if (is_array($a[0])) {
+            $this->setProperties($options);
+        } elseif (isset($a[0]) && isset($a[1])) {
+            $this->key = $a[0];
+            $this->expire = $a[1];
         }
 
         // Initialize if invalid.
         if (!$this->isValid()) {
             $this->init();
         }
+    }
+
+    /**
+     * Set multiple properties of this object via an associative array.
+     *
+     * @param array $properties An associative array of property names and values
+     * @return self
+     */
+    private function setProperties(array $properties)
+    {
+        foreach($properties as $name => $value) {
+            if (property_exists($this, $name)) {
+                $this->{$name} = $value;
+            } else {
+                throw new Exception("{$name} is not a valid property");
+            }
+        }
+
+        return $this;
     }
 
     /**
