@@ -7,8 +7,9 @@ A simple filesystem cache [made with care](http://chrisullyott.com/blog/2014-11-
 <?php
 
     $cache = new Cache(array(
-        'key'    => 'test-instance',
-        'expire' => 'hourly'
+        'container' => $_SERVER['DOCUMENT_ROOT'] . '/cache',
+        'key'       => 'test-instance',
+        'expire'    => 'hourly'
     ));
 
     $url = 'http://ip-api.com/json/wired.com';
