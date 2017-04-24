@@ -126,7 +126,7 @@ class Cache
 
         // Set properties.
         if (is_array($a[0])) {
-            $this->setProperties($options);
+            $this->setProperties($a[0]);
         } elseif (isset($a[0]) && isset($a[1])) {
             $this->key = $a[0];
             $this->expire = $a[1];
