@@ -6,10 +6,6 @@
  * Interacts with the filesystem to store and retrieve data.
  */
 
-namespace Cache\Library\Data;
-
-use Cache\Library\Utility\File;
-
 abstract class AbstractData
 {
     /**

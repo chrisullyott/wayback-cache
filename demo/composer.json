@@ -1,4 +1,7 @@
 {
+    "require": {
+        "chrisullyott/php-file": "dev-master"
+    },
     "autoload": {
         "classmap": [
             "../src/"

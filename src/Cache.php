@@ -11,12 +11,6 @@
  * @copyright Chris Ullyott
  */
 
-use Cache\Library\Data\Catalog;
-use Cache\Library\Utility\Curl;
-use Cache\Library\Utility\Time;
-use Cache\Library\Utility\File;
-use Cache\Library\Utility\String;
-
 class Cache
 {
     /**

@@ -4,8 +4,6 @@
  * Methods for time.
  */
 
-namespace Cache\Library\Utility;
-
 class Time
 {
     /**
