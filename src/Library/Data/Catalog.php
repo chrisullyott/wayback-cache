@@ -6,8 +6,6 @@
  * Extends AbstractData to provide CRUD operations necessary for caching.
  */
 
-namespace Cache\Library\Data;
-
 class Catalog extends AbstractData
 {
     /**

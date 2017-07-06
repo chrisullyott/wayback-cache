@@ -6,8 +6,6 @@
  * http://php.net/manual/en/function.curl-setopt.php
  */
 
-namespace Cache\Library\Utility;
-
 class Curl
 {
     /**
