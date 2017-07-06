@@ -15,7 +15,8 @@
         "caching"
     ],
     "require": {
-        "php": ">=5.6.0"
+        "php": ">=5.6.0",
+        "chrisullyott/php-file": "dev-master"
     },
     "autoload": {
         "classmap": [
