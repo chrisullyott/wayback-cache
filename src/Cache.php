@@ -453,7 +453,9 @@ class Cache
         $history = $this->getCatalog()->read('history', true);
         $history = array_slice($history, 0, $this->historyLimit);
 
-        $filesInCache = File::listDir($this->getCachePath(), '*', true);
+        $filesInCache = File::listDir($this->getCachePath());
+        $filesInCache = array_map('basename', $filesInCache);
+
         $filesToKeep = array_map(
             function ($arr) {
                 return $arr['file'];
