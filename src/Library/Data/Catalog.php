@@ -3,74 +3,46 @@
 /**
  * Catalog
  *
- * Extends AbstractData to provide CRUD operations necessary for caching.
+ * Wrap the Log class to allow data storage in memory.
+ *
+ * @author Chris Ullyott <chris@monkdevelopment.com>
  */
 
-class Catalog extends AbstractData
+class Catalog extends Log
 {
     /**
-     * Constructor.
+     * The log data in memory.
+     *
+     * @var array
      */
-    public function __construct($filePath)
+    private $data;
+
+    /**
+     * Get a stored value by key.
+     *
+     * @param  string|integer $key The item key
+     * @param  boolean $fromFile Whether to read from the physical file
+     * @return mixed
+     */
+    public function get($key, $fromFile = false)
     {
-        parent::__construct($filePath);
+        $array = $this->getAll($fromFile);
+
+        return isset($array[$key]) ? $array[$key] : null;
     }
 
     /**
-     * Create a new catalog, overwriting an existing one.
+     * Get the log data.
      *
-     * @param  array $data Initial data to store
-     * @return bool        Whether the file was successfully written
+     * @param  boolean $fromFile Whether to read from the physical file
+     * @return array
      */
-    public function create(array $data)
+    public function getAll($fromFile = false)
     {
-        $this->setAll($data);
-
-        return $this->save();
-    }
-
-    /**
-     * Read data from the object. Return either a specific key, or all keys.
-     *
-     * @param  string $key A specific data key
-     * @return string|array
-     */
-    public function read($key = null)
-    {
-        if ($key) {
-            return $this->get($key);
-        } else {
-            return $this->getAll();
-        }
-    }
-
-    /**
-     * Update the catalog with new data and save the file.
-     * Accepts an array as a single argument, or a key + value pair as two arguments.
-     *
-     * @return bool Whether the file was successfully written
-     */
-    public function update()
-    {
-        $a = func_get_args();
-
-        if (is_array($a[0])) {
-            $this->mergeAll($a[0]);
-        } elseif (isset($a[0]) && isset($a[1])) {
-            $this->set($a[0], $a[1]);
+        if (!$this->data || $fromFile) {
+            $this->data = parent::getAll();
         }
 
-        return $this->save();
+        return $this->data;
     }
-
-    /**
-     * Delete the object and its data.
-     *
-     * @return bool Whether the file was successfully deleted
-     */
-    public function delete()
-    {
-        return parent::clear() && parent::delete();
-    }
-
 }
