@@ -199,6 +199,16 @@ class Cache
     }
 
     /**
+     * Get the catalog path.
+     *
+     * @return string
+     */
+    private function getCatalogPath()
+    {
+        return File::path($this->getCachePath(), '.catalog');
+    }
+
+    /**
      * Get the Catalog object belonging to this cache.
      *
      * @return Catalog
@@ -206,8 +216,7 @@ class Cache
     private function getCatalog()
     {
         if (!$this->catalog) {
-            $catalogPath = File::path($this->getCachePath(), '.catalog');
-            $this->catalog = new Catalog($catalogPath);
+            $this->catalog = new Catalog($this->getCatalogPath());
         }
 
         return $this->catalog;
