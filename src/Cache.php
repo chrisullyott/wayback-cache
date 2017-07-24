@@ -5,7 +5,6 @@
  *
  * Caches data while intelligently managing a history of previous states.
  *
- * @version 3.0.5
  * @link https://github.com/chrisullyott/wayback-cache
  * @author Chris Ullyott
  * @copyright Chris Ullyott
