@@ -2,6 +2,8 @@
 
 /**
  * Methods for time.
+ *
+ * @author Chris Ullyott <contact@chrisullyott.com>
  */
 
 class Time
@@ -81,5 +83,4 @@ class Time
     {
         return is_numeric($time) && date('Y', $time) > '1970';
     }
-
 }

@@ -4,6 +4,8 @@
  * For fetching data by URL.
  *
  * http://php.net/manual/en/function.curl-setopt.php
+ *
+ * @author Chris Ullyott <contact@chrisullyott.com>
  */
 
 class Curl
@@ -238,5 +240,4 @@ class Curl
     {
         return trim(substr($response, $headerSize));
     }
-
 }

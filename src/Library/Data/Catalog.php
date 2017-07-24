@@ -3,9 +3,9 @@
 /**
  * Catalog
  *
- * Wrap the Log class to allow data storage in memory.
+ * Extend class Log to allow data storage in memory.
  *
- * @author Chris Ullyott <chris@monkdevelopment.com>
+ * @author Chris Ullyott <contact@chrisullyott.com>
  */
 
 class Catalog extends Log
