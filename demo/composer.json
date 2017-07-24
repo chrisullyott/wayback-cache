@@ -1,6 +1,7 @@
 {
     "require": {
-        "chrisullyott/php-file": "dev-master"
+        "chrisullyott/php-file": "dev-master",
+        "chrisullyott/php-log": "dev-master"
     },
     "autoload": {
         "classmap": [

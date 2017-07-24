@@ -246,7 +246,7 @@ class Cache
             'history'      => array()
         );
 
-        return $this->getCatalog()->create($props);
+        return $this->getCatalog()->setAll($props);
     }
 
     /**
@@ -258,7 +258,7 @@ class Cache
      */
     private function isValid()
     {
-        $props = $this->getCatalog()->read();
+        $props = $this->getCatalog()->getAll();
 
         foreach (self::$matchedProps as $p) {
             if (!array_key_exists($p, $props) || ($props[$p] !== $this->{$p})) {
@@ -276,7 +276,7 @@ class Cache
      */
     private function isExpired()
     {
-        return $this->getCatalog()->read('expireTime') <= $this->getRunTime();
+        return $this->getCatalog()->get('expireTime') <= $this->getRunTime();
     }
 
     /**
@@ -375,7 +375,7 @@ class Cache
      */
     private function isRateLimited($remainingHeader = null, $resetTimeHeader = null)
     {
-        $history = $this->getCatalog()->read('history');
+        $history = $this->getCatalog()->get('history');
 
         if (!empty($history[0]) && $remainingHeader && $resetTimeHeader) {
             $last = $history[0];
@@ -407,7 +407,7 @@ class Cache
      */
     private function readFromHistory($index = 0)
     {
-        $history = $this->getCatalog()->read('history');
+        $history = $this->getCatalog()->get('history');
 
         if (isset($history[$index]['file'])) {
             $file = File::path($this->getCachePath(), $history[$index]['file']);
@@ -426,7 +426,7 @@ class Cache
      */
     private function addToHistory($file, array $extraData = array())
     {
-        $history = $this->getCatalog()->read('history');
+        $history = $this->getCatalog()->get('history');
 
         $historyState = array_merge($extraData, array(
             'file' => basename($file),
@@ -436,7 +436,7 @@ class Cache
         array_unshift($history, $historyState);
         $history = array_slice($history, 0, $this->historyLimit);
 
-        return $this->getCatalog()->update(array(
+        return $this->getCatalog()->merge(array(
             'history'    => $history,
             'expireTime' => Time::nextExpire($this->expire, $this->offset)
         ));
@@ -450,7 +450,7 @@ class Cache
      */
     private function cleanupHistory()
     {
-        $history = $this->getCatalog()->read('history', true);
+        $history = $this->getCatalog()->get('history', true);
         $history = array_slice($history, 0, $this->historyLimit);
 
         $filesInCache = File::listDir($this->getCachePath());
@@ -467,7 +467,7 @@ class Cache
             unlink(File::path($this->getCachePath(), $file));
         }
 
-        return $this->getCatalog()->update(array(
+        return $this->getCatalog()->merge(array(
             'cleanupTime' => Time::nextCleanup(),
             'historyLimit' => $this->historyLimit,
             'history' => $history
@@ -481,7 +481,7 @@ class Cache
      */
     private function isCleanupTime()
     {
-        return $this->getCatalog()->read('cleanupTime') <= $this->getRunTime();
+        return $this->getCatalog()->get('cleanupTime') <= $this->getRunTime();
     }
 
     /**
@@ -505,7 +505,7 @@ class Cache
      */
     private function increment()
     {
-        return $this->getCatalog()->update(array(
+        return $this->getCatalog()->merge(array(
             'expireTime' => Time::nextExpire($this->expire, $this->offset)
         ));
     }
@@ -517,7 +517,7 @@ class Cache
      */
     private function invalidate()
     {
-        return $this->getCatalog()->update('expireTime', 0);
+        return $this->getCatalog()->set('expireTime', 0);
     }
 
     /**
@@ -529,5 +529,4 @@ class Cache
     {
         return File::deleteDir($this->getCachePath());
     }
-
 }
