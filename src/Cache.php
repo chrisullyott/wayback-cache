@@ -6,8 +6,7 @@
  * Caches data while intelligently managing a history of previous states.
  *
  * @link https://github.com/chrisullyott/wayback-cache
- * @author Chris Ullyott
- * @copyright Chris Ullyott
+ * @author Chris Ullyott <contact@chrisullyott.com>
  */
 
 class Cache
