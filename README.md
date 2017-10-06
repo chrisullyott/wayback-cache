@@ -30,15 +30,9 @@ Features
 Installation
 ------------
 
-Download, or use [Composer](https://getcomposer.org/) to install:
+With Composer:
 
 ```
-"repositories": [
-    {
-        "type": "vcs",
-        "url": "https://github.com/chrisullyott/wayback-cache"
-    }
-],
 "require": {
     "chrisullyott/wayback-cache": "dev-master"
 }
